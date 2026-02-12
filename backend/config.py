@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-secret-change-in-production"
     gemini_api_key: str = ""
     frontend_url: str = "http://localhost:5173"
-    database_url: str = "tracker.db"
+    database_url: str = "postgresql://localhost:5432/tracker"
     jwt_expiry_days: int = 7
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

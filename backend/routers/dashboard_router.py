@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, Query
-import aiosqlite
 from datetime import date, timedelta
 
 from dependencies import get_db, get_current_user
 from models import DailySummary, FoodEntryResponse, WeeklyResponse, WeeklyDay
+from routers.food_router import _row_to_dict
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
@@ -12,18 +12,17 @@ router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 async def get_daily(
     date_str: str = Query(None, alias="date", description="YYYY-MM-DD"),
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
     target_date = date_str or date.today().isoformat()
 
-    cursor = await db.execute(
+    rows = await db.fetch(
         """SELECT * FROM food_entries
-           WHERE user_id = ? AND DATE(logged_at) = ?
+           WHERE user_id = $1 AND DATE(logged_at) = $2::date
            ORDER BY logged_at DESC""",
-        (user["id"], target_date),
+        user["id"], target_date,
     )
-    rows = await cursor.fetchall()
-    entries = [FoodEntryResponse(**dict(r)) for r in rows]
+    entries = [FoodEntryResponse(**_row_to_dict(r)) for r in rows]
 
     total_protein = sum(e.protein_g for e in entries)
     total_calories = sum(e.calories for e in entries)
@@ -41,7 +40,7 @@ async def get_daily(
 @router.get("/weekly", response_model=WeeklyResponse)
 async def get_weekly(
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
     today = date.today()
     days = []
@@ -49,19 +48,18 @@ async def get_weekly(
     for i in range(6, -1, -1):
         d = today - timedelta(days=i)
         d_str = d.isoformat()
-        cursor = await db.execute(
+        row = await db.fetchrow(
             """SELECT COALESCE(SUM(protein_g), 0) as total_protein,
                       COALESCE(SUM(calories), 0) as total_calories
                FROM food_entries
-               WHERE user_id = ? AND DATE(logged_at) = ?""",
-            (user["id"], d_str),
+               WHERE user_id = $1 AND DATE(logged_at) = $2::date""",
+            user["id"], d_str,
         )
-        row = await cursor.fetchone()
         days.append(
             WeeklyDay(
                 date=d_str,
-                total_protein=round(row[0], 1),
-                total_calories=round(row[1], 1),
+                total_protein=round(row['total_protein'], 1),
+                total_calories=round(row['total_calories'], 1),
             )
         )
 

@@ -3,16 +3,18 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import get_settings
-from database import init_db
+from database import create_pool, close_pool, init_db
 from seed import seed_common_foods
 from routers import auth_router, food_router, dashboard_router, group_router
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    await create_pool()
     await init_db()
     await seed_common_foods()
     yield
+    await close_pool()
 
 
 app = FastAPI(title="Protein & Calorie Tracker", lifespan=lifespan)

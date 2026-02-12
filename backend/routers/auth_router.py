@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import RedirectResponse
-import aiosqlite
 
 from auth import get_google_login_url, exchange_google_code, create_jwt
 from dependencies import get_db, get_current_user
@@ -16,7 +15,7 @@ async def google_login():
 
 
 @router.get("/google/callback")
-async def google_callback(code: str, db: aiosqlite.Connection = Depends(get_db)):
+async def google_callback(code: str, db=Depends(get_db)):
     try:
         google_user = await exchange_google_code(code)
     except Exception:
@@ -28,26 +27,23 @@ async def google_callback(code: str, db: aiosqlite.Connection = Depends(get_db))
     avatar_url = google_user.get("picture")
 
     # Upsert user
-    cursor = await db.execute(
-        "SELECT id FROM users WHERE google_id = ?", (google_id,)
+    existing = await db.fetchrow(
+        "SELECT id FROM users WHERE google_id = $1", google_id
     )
-    existing = await cursor.fetchone()
 
     if existing:
-        user_id = existing[0]
+        user_id = existing['id']
         await db.execute(
-            "UPDATE users SET display_name = ?, avatar_url = ? WHERE id = ?",
-            (display_name, avatar_url, user_id),
+            "UPDATE users SET display_name = $1, avatar_url = $2 WHERE id = $3",
+            display_name, avatar_url, user_id,
         )
     else:
-        cursor = await db.execute(
+        user_id = await db.fetchval(
             """INSERT INTO users (google_id, email, display_name, avatar_url)
-               VALUES (?, ?, ?, ?)""",
-            (google_id, email, display_name, avatar_url),
+               VALUES ($1, $2, $3, $4) RETURNING id""",
+            google_id, email, display_name, avatar_url,
         )
-        user_id = cursor.lastrowid
 
-    await db.commit()
     token = create_jwt(user_id)
     frontend_url = get_settings().frontend_url
     return RedirectResponse(f"{frontend_url}/auth/callback?token={token}")
@@ -62,7 +58,7 @@ async def get_me(user: dict = Depends(get_current_user)):
 async def update_goals(
     goals: GoalUpdate,
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
     updates = {}
     if goals.protein_goal is not None:
@@ -73,11 +69,16 @@ async def update_goals(
     if not updates:
         return UserResponse(**user)
 
-    set_clause = ", ".join(f"{k} = ?" for k in updates)
-    values = list(updates.values()) + [user["id"]]
-    await db.execute(f"UPDATE users SET {set_clause} WHERE id = ?", values)
-    await db.commit()
+    set_parts = []
+    params = []
+    for i, (k, v) in enumerate(updates.items(), 1):
+        set_parts.append(f"{k} = ${i}")
+        params.append(v)
+    set_clause = ", ".join(set_parts)
+    params.append(user["id"])
+    await db.execute(
+        f"UPDATE users SET {set_clause} WHERE id = ${len(params)}", *params
+    )
 
-    cursor = await db.execute("SELECT * FROM users WHERE id = ?", (user["id"],))
-    updated = await cursor.fetchone()
+    updated = await db.fetchrow("SELECT * FROM users WHERE id = $1", user["id"])
     return UserResponse(**dict(updated))

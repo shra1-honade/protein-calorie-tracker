@@ -1,6 +1,5 @@
 import secrets
 from fastapi import APIRouter, Depends, HTTPException, Query
-import aiosqlite
 from datetime import date, timedelta
 
 from dependencies import get_db, get_current_user
@@ -22,20 +21,18 @@ def generate_invite_code() -> str:
 async def create_group(
     req: GroupCreateRequest,
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
     invite_code = generate_invite_code()
-    cursor = await db.execute(
-        "INSERT INTO groups (name, invite_code, created_by) VALUES (?, ?, ?)",
-        (req.name, invite_code, user["id"]),
-    )
-    group_id = cursor.lastrowid
-
-    await db.execute(
-        "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
-        (group_id, user["id"]),
-    )
-    await db.commit()
+    async with db.transaction():
+        group_id = await db.fetchval(
+            "INSERT INTO groups (name, invite_code, created_by) VALUES ($1, $2, $3) RETURNING id",
+            req.name, invite_code, user["id"],
+        )
+        await db.execute(
+            "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2)",
+            group_id, user["id"],
+        )
 
     return GroupResponse(
         id=group_id,
@@ -50,38 +47,32 @@ async def create_group(
 async def join_group(
     req: GroupJoinRequest,
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
-    cursor = await db.execute(
-        "SELECT * FROM groups WHERE invite_code = ?", (req.invite_code,)
+    group = await db.fetchrow(
+        "SELECT * FROM groups WHERE invite_code = $1", req.invite_code
     )
-    group = await cursor.fetchone()
     if not group:
         raise HTTPException(status_code=404, detail="Group not found")
 
     group = dict(group)
     # Check if already a member
-    cursor = await db.execute(
-        "SELECT id FROM group_members WHERE group_id = ? AND user_id = ?",
-        (group["id"], user["id"]),
+    existing = await db.fetchrow(
+        "SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2",
+        group["id"], user["id"],
     )
-    if await cursor.fetchone():
-        pass  # Already a member, just return
-    else:
+    if not existing:
         try:
             await db.execute(
-                "INSERT INTO group_members (group_id, user_id) VALUES (?, ?)",
-                (group["id"], user["id"]),
+                "INSERT INTO group_members (group_id, user_id) VALUES ($1, $2)",
+                group["id"], user["id"],
             )
-            await db.commit()
         except Exception:
-            # Race condition: already joined between check and insert
-            await db.rollback()
+            pass  # Race condition: already joined between check and insert
 
-    cursor = await db.execute(
-        "SELECT COUNT(*) FROM group_members WHERE group_id = ?", (group["id"],)
+    count = await db.fetchval(
+        "SELECT COUNT(*) FROM group_members WHERE group_id = $1", group["id"]
     )
-    count = (await cursor.fetchone())[0]
 
     return GroupResponse(
         id=group["id"],
@@ -95,18 +86,17 @@ async def join_group(
 @router.get("", response_model=list[GroupResponse])
 async def list_groups(
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
-    cursor = await db.execute(
+    rows = await db.fetch(
         """SELECT g.*, COUNT(gm2.id) as member_count
            FROM groups g
-           JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = ?
+           JOIN group_members gm ON gm.group_id = g.id AND gm.user_id = $1
            JOIN group_members gm2 ON gm2.group_id = g.id
            GROUP BY g.id
            ORDER BY g.created_at DESC""",
-        (user["id"],),
+        user["id"],
     )
-    rows = await cursor.fetchall()
     return [
         GroupResponse(
             id=r["id"],
@@ -124,38 +114,39 @@ async def get_leaderboard(
     group_id: int,
     period: str = Query("daily", regex="^(daily|weekly)$"),
     user: dict = Depends(get_current_user),
-    db: aiosqlite.Connection = Depends(get_db),
+    db=Depends(get_db),
 ):
     # Verify user is in the group
-    cursor = await db.execute(
-        "SELECT id FROM group_members WHERE group_id = ? AND user_id = ?",
-        (group_id, user["id"]),
+    member = await db.fetchrow(
+        "SELECT id FROM group_members WHERE group_id = $1 AND user_id = $2",
+        group_id, user["id"],
     )
-    if not await cursor.fetchone():
+    if not member:
         raise HTTPException(status_code=403, detail="Not a member of this group")
 
     if period == "daily":
         date_filter = date.today().isoformat()
-        date_clause = "DATE(fe.logged_at) = ?"
+        date_clause = "DATE(fe.logged_at) = $1::date"
         date_params = [date_filter]
+        group_param = "$2"
     else:
         start = (date.today() - timedelta(days=6)).isoformat()
         end = date.today().isoformat()
-        date_clause = "DATE(fe.logged_at) BETWEEN ? AND ?"
+        date_clause = "DATE(fe.logged_at) BETWEEN $1::date AND $2::date"
         date_params = [start, end]
+        group_param = "$3"
 
-    cursor = await db.execute(
+    rows = await db.fetch(
         f"""SELECT u.id as user_id, u.display_name, u.avatar_url,
                    COALESCE(SUM(fe.protein_g), 0) as total_protein
             FROM group_members gm
             JOIN users u ON u.id = gm.user_id
             LEFT JOIN food_entries fe ON fe.user_id = u.id AND {date_clause}
-            WHERE gm.group_id = ?
-            GROUP BY u.id
+            WHERE gm.group_id = {group_param}
+            GROUP BY u.id, u.display_name, u.avatar_url
             ORDER BY total_protein DESC""",
-        (*date_params, group_id),
+        *date_params, group_id,
     )
-    rows = await cursor.fetchall()
 
     return [
         LeaderboardEntry(

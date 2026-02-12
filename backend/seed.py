@@ -1,5 +1,4 @@
-import aiosqlite
-from config import get_settings
+import database
 
 COMMON_FOODS = [
     ("Chicken Breast (100g)", 31.0, 165, "meat", "\U0001f357", 1),
@@ -21,20 +20,15 @@ COMMON_FOODS = [
 
 
 async def seed_common_foods():
-    db = await aiosqlite.connect(get_settings().database_url)
-    try:
-        cursor = await db.execute("SELECT COUNT(*) FROM common_foods")
-        count = (await cursor.fetchone())[0]
+    async with database.pool.acquire() as conn:
+        count = await conn.fetchval("SELECT COUNT(*) FROM common_foods")
         if count == 0:
-            await db.executemany(
+            await conn.executemany(
                 """INSERT INTO common_foods
                    (name, protein_g, calories, category, icon, sort_order)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
+                   VALUES ($1, $2, $3, $4, $5, $6)""",
                 COMMON_FOODS,
             )
-            await db.commit()
             print(f"Seeded {len(COMMON_FOODS)} common foods")
         else:
             print(f"Common foods already seeded ({count} entries)")
-    finally:
-        await db.close()
