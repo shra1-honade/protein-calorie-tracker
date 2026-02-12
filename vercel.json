@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://RENDER_BACKEND_URL/:path*"
+      "destination": "https://protein-calorie-tracker.onrender.com/:path*"
     }
   ]
 }
