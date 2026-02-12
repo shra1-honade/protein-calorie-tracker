@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Check } from 'lucide-react';
+
 import api from '../api';
 import { CommonFood, DetectedFood } from '../types';
 import { MealType } from '../utils/mealHelpers';
@@ -12,7 +12,6 @@ import DetectedFoodsList from '../components/DetectedFoodsList';
 type Tab = 'quick' | 'camera' | 'manual';
 
 export default function LogFoodPage() {
-  const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>('quick');
   const [toast, setToast] = useState('');
   const [detectedFoods, setDetectedFoods] = useState<DetectedFood[] | null>(null);

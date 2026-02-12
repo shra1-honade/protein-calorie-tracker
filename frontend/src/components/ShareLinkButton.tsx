@@ -36,7 +36,7 @@ export default function ShareLinkButton({ inviteCode }: Props) {
         <>
           <Check size={16} /> Copied!
         </>
-      ) : navigator.share ? (
+      ) : navigator.share !== undefined ? (
         <>
           <Share2 size={16} /> Share
         </>
