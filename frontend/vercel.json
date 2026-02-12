@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://protein-calorie-tracker.onrender.com/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
