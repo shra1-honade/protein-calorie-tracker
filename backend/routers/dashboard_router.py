@@ -14,11 +14,11 @@ async def get_daily(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    target_date = date_str or date.today().isoformat()
+    target_date = date.fromisoformat(date_str) if date_str else date.today()
 
     rows = await db.fetch(
         """SELECT * FROM food_entries
-           WHERE user_id = $1 AND DATE(logged_at) = $2::date
+           WHERE user_id = $1 AND DATE(logged_at) = $2
            ORDER BY logged_at DESC""",
         user["id"], target_date,
     )
@@ -28,7 +28,7 @@ async def get_daily(
     total_calories = sum(e.calories for e in entries)
 
     return DailySummary(
-        date=target_date,
+        date=target_date.isoformat(),
         total_protein=round(total_protein, 1),
         total_calories=round(total_calories, 1),
         protein_goal=user["protein_goal"],
@@ -47,17 +47,16 @@ async def get_weekly(
 
     for i in range(6, -1, -1):
         d = today - timedelta(days=i)
-        d_str = d.isoformat()
         row = await db.fetchrow(
             """SELECT COALESCE(SUM(protein_g), 0) as total_protein,
                       COALESCE(SUM(calories), 0) as total_calories
                FROM food_entries
-               WHERE user_id = $1 AND DATE(logged_at) = $2::date""",
-            user["id"], d_str,
+               WHERE user_id = $1 AND DATE(logged_at) = $2""",
+            user["id"], d,
         )
         days.append(
             WeeklyDay(
-                date=d_str,
+                date=d.isoformat(),
                 total_protein=round(row['total_protein'], 1),
                 total_calories=round(row['total_calories'], 1),
             )

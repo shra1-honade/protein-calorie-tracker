@@ -125,15 +125,13 @@ async def get_leaderboard(
         raise HTTPException(status_code=403, detail="Not a member of this group")
 
     if period == "daily":
-        date_filter = date.today().isoformat()
-        date_clause = "DATE(fe.logged_at) = $1::date"
-        date_params = [date_filter]
+        date_clause = "DATE(fe.logged_at) = $1"
+        date_params = [date.today()]
         group_param = "$2"
     else:
-        start = (date.today() - timedelta(days=6)).isoformat()
-        end = date.today().isoformat()
-        date_clause = "DATE(fe.logged_at) BETWEEN $1::date AND $2::date"
-        date_params = [start, end]
+        start = date.today() - timedelta(days=6)
+        date_clause = "DATE(fe.logged_at) BETWEEN $1 AND $2"
+        date_params = [start, date.today()]
         group_param = "$3"
 
     rows = await db.fetch(

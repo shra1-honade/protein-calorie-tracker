@@ -64,11 +64,13 @@ async def get_entries(
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
+    from datetime import date as date_type
+    target = date_type.fromisoformat(date)
     rows = await db.fetch(
         """SELECT * FROM food_entries
-           WHERE user_id = $1 AND DATE(logged_at) = $2::date
+           WHERE user_id = $1 AND DATE(logged_at) = $2
            ORDER BY logged_at DESC""",
-        user["id"], date,
+        user["id"], target,
     )
     return [FoodEntryResponse(**_row_to_dict(r)) for r in rows]
 
