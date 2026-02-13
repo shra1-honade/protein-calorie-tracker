@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 import { useDashboard } from '../hooks/useDashboard';
 import DailySummaryCard from '../components/DailySummaryCard';
 import MealList from '../components/MealList';
@@ -27,6 +29,13 @@ export default function DashboardPage() {
   const [date, setDate] = useState(today);
   const [showGoals, setShowGoals] = useState(false);
   const { daily, weekly, loading, refresh } = useDashboard(date);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const handleDelete = async (id: number) => {
     await api.delete(`/food/entries/${id}`);
@@ -35,6 +44,18 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      {/* Header with user greeting & logout */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-500">Hi, <span className="font-medium text-gray-800">{user?.display_name?.split(' ')[0]}</span></p>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-red-500 transition-colors"
+        >
+          <LogOut size={16} />
+          Logout
+        </button>
+      </div>
+
       {/* Date nav */}
       <div className="flex items-center justify-between">
         <button onClick={() => setDate(shiftDate(date, -1))} className="p-2">
