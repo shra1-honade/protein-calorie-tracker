@@ -1,4 +1,38 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect x="42" y="42" width="428" height="428" rx="86" ry="86" fill="#16a34a"/>
-  <text x="256" y="320" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="bold" font-size="290" fill="white">P</text>
+  <defs>
+    <linearGradient id="bgGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#16a34a;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="dumbbellGrad512" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f0f0f0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffffff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle with gradient -->
+  <circle cx="256" cy="256" r="236" fill="url(#bgGrad512)"/>
+
+  <!-- Dumbbell icon -->
+  <g transform="translate(256, 256)">
+    <!-- Left weight -->
+    <rect x="-140" y="-64" width="54" height="128" rx="10" fill="url(#dumbbellGrad512)"/>
+    <!-- Right weight -->
+    <rect x="86" y="-64" width="54" height="128" rx="10" fill="url(#dumbbellGrad512)"/>
+    <!-- Bar -->
+    <rect x="-86" y="-22" width="172" height="44" rx="6" fill="url(#dumbbellGrad512)"/>
+
+    <!-- Accent flame -->
+    <g transform="translate(102, -86)">
+      <path d="M 0 0 Q 10 -20 0 -42 Q -10 -26 0 0" fill="#fbbf24" opacity="0.9"/>
+      <path d="M 20 -6 Q 30 -20 20 -38 Q 10 -26 20 -6" fill="#f59e0b" opacity="0.8"/>
+    </g>
+
+    <!-- Protein dots -->
+    <circle cx="-108" cy="86" r="8" fill="#86efac"/>
+    <circle cx="-76" cy="94" r="8" fill="#86efac"/>
+    <circle cx="-44" cy="88" r="8" fill="#86efac"/>
+  </g>
 </svg>
