@@ -11,6 +11,7 @@ import LogFoodPage from './pages/LogFoodPage';
 import GroupPage from './pages/GroupPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import JoinGroupPage from './pages/JoinGroupPage';
+import AdminPage from './pages/AdminPage';
 
 function AuthCallback() {
   const [params] = useSearchParams();
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/log" element={<LogFoodPage />} />
             <Route path="/groups" element={<GroupPage />} />
             <Route path="/groups/:id/leaderboard" element={<LeaderboardPage />} />
+            <Route path="/admin" element={<AdminPage />} />
           </Route>
         </Routes>
       </AuthProvider>
