@@ -6,9 +6,7 @@ import { useDashboard } from '../hooks/useDashboard';
 import DailySummaryCard from '../components/DailySummaryCard';
 import MealList from '../components/MealList';
 import GoalSettingModal from '../components/GoalSettingModal';
-import EditFoodModal from '../components/EditFoodModal';
 import api from '../api';
-import { FoodEntry } from '../types';
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00');
@@ -34,7 +32,6 @@ export default function DashboardPage() {
   const today = toLocalDateStr(new Date());
   const [date, setDate] = useState(today);
   const [showGoals, setShowGoals] = useState(false);
-  const [editingEntry, setEditingEntry] = useState<FoodEntry | null>(null);
   const { daily, weekly, loading, refresh } = useDashboard(date);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -46,23 +43,6 @@ export default function DashboardPage() {
 
   const handleDelete = async (id: number) => {
     await api.delete(`/food/entries/${id}`);
-    refresh();
-  };
-
-  const handleEdit = (entry: FoodEntry) => {
-    setEditingEntry(entry);
-  };
-
-  const handleSaveEdit = async (id: number, data: {
-    food_name: string;
-    protein_g: number;
-    calories: number;
-    meal_type: string;
-    serving_qty: number;
-    logged_at: string;
-  }) => {
-    await api.put(`/food/entries/${id}`, data);
-    setEditingEntry(null);
     refresh();
   };
 
@@ -131,17 +111,11 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <MealList entries={daily.entries} onDelete={handleDelete} onEdit={handleEdit} />
+          <MealList entries={daily.entries} onDelete={handleDelete} />
         </>
       ) : null}
 
       <GoalSettingModal open={showGoals} onClose={() => { setShowGoals(false); refresh(); }} />
-      <EditFoodModal
-        entry={editingEntry}
-        open={!!editingEntry}
-        onClose={() => setEditingEntry(null)}
-        onSave={handleSaveEdit}
-      />
     </div>
   );
 }
