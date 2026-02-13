@@ -47,8 +47,9 @@ export const MEAL_CONFIGS: Record<MealType, MealConfig> = {
 export const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack'];
 
 // Format ISO timestamp to readable time (e.g., "8:30 AM")
+// Stored times are local time tagged as UTC, so strip timezone offset
 export function formatTime(isoString: string): string {
-  const date = new Date(isoString);
+  const date = new Date(isoString.replace(/[+-]\d{2}:\d{2}$/, ''));
   return date.toLocaleTimeString('en-US', {
     hour: 'numeric',
     minute: '2-digit',
