@@ -18,14 +18,18 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 function shiftDate(dateStr: string, days: number): string {
   const d = new Date(dateStr + 'T00:00:00');
   d.setDate(d.getDate() + days);
-  return d.toISOString().split('T')[0]!;
+  return toLocalDateStr(d);
 }
 
 export default function DashboardPage() {
-  const today = new Date().toISOString().split('T')[0]!;
+  const today = toLocalDateStr(new Date());
   const [date, setDate] = useState(today);
   const [showGoals, setShowGoals] = useState(false);
   const { daily, weekly, loading, refresh } = useDashboard(date);
