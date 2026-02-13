@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Calendar } from 'lucide-react';
 
 import api from '../api';
 import { CommonFood, DetectedFood } from '../types';
@@ -11,7 +11,23 @@ import DetectedFoodsList from '../components/DetectedFoodsList';
 
 type Tab = 'quick' | 'camera' | 'manual';
 
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function formatDateDisplay(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((today.getTime() - d.getTime()) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
 export default function LogFoodPage() {
+  const today = toLocalDateStr(new Date());
+  const [selectedDate, setSelectedDate] = useState(today);
   const [tab, setTab] = useState<Tab>('quick');
   const [toast, setToast] = useState('');
   const [detectedFoods, setDetectedFoods] = useState<DetectedFood[] | null>(null);
@@ -30,8 +46,19 @@ export default function LogFoodPage() {
     fdc_id?: string;
     serving_qty?: number;
   }) => {
+    // Combine selected date with current time
     const now = new Date();
-    const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, -1);
+    const selectedDateObj = new Date(selectedDate + 'T00:00:00');
+    const combined = new Date(
+      selectedDateObj.getFullYear(),
+      selectedDateObj.getMonth(),
+      selectedDateObj.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds()
+    );
+    const localISO = new Date(combined.getTime() - combined.getTimezoneOffset() * 60000).toISOString().slice(0, -1);
+
     await api.post('/food/log', {
       food_name: data.food_name,
       protein_g: data.protein_g,
@@ -90,6 +117,26 @@ export default function LogFoodPage() {
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
       <h1 className="text-xl font-bold">Log Food</h1>
+
+      {/* Date Selector */}
+      <div className="card">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          <Calendar className="inline-block mr-2" size={16} />
+          Log for date
+        </label>
+        <div className="flex gap-2 items-center">
+          <input
+            type="date"
+            value={selectedDate}
+            max={today}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <span className="text-sm text-gray-500 min-w-[100px]">
+            {formatDateDisplay(selectedDate)}
+          </span>
+        </div>
+      </div>
 
       {/* Tab bar */}
       <div className="flex rounded-lg bg-gray-100 p-1">
