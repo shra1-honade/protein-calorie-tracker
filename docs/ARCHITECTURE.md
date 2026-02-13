@@ -120,7 +120,7 @@ erDiagram
 ## 4. Authentication Flow
 
 ```mermaid
-%%{init: {'theme':'neutral'}}%%
+%%{init: {'theme':'neutral', 'themeVariables': { 'actorTextColor':'#FFF','signalTextColor':'#FFF','labelTextColor':'#FFF','loopTextColor':'#FFF','noteTextColor':'#FFF'}}}%%
 sequenceDiagram
     participant U as 👤 User
     participant F as 🌐 Frontend
