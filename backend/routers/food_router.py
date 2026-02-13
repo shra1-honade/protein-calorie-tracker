@@ -75,6 +75,44 @@ async def get_entries(
     return [FoodEntryResponse(**_row_to_dict(r)) for r in rows]
 
 
+@router.put("/entries/{entry_id}", response_model=FoodEntryResponse)
+async def update_entry(
+    entry_id: int,
+    entry: FoodLogRequest,
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Update an existing food entry."""
+    existing = await db.fetchrow(
+        "SELECT * FROM food_entries WHERE id = $1 AND user_id = $2",
+        entry_id, user["id"],
+    )
+    if not existing:
+        raise HTTPException(status_code=404, detail="Entry not found")
+
+    if entry.logged_at:
+        logged_at = datetime.fromisoformat(entry.logged_at)
+    else:
+        logged_at = datetime.now(timezone.utc)
+
+    await db.execute(
+        """UPDATE food_entries
+           SET food_name = $1, protein_g = $2, calories = $3,
+               meal_type = $4, serving_qty = $5, logged_at = $6
+           WHERE id = $7""",
+        entry.food_name,
+        entry.protein_g * entry.serving_qty,
+        entry.calories * entry.serving_qty,
+        entry.meal_type,
+        entry.serving_qty,
+        logged_at,
+        entry_id,
+    )
+
+    row = await db.fetchrow("SELECT * FROM food_entries WHERE id = $1", entry_id)
+    return FoodEntryResponse(**_row_to_dict(row))
+
+
 @router.delete("/entries/{entry_id}")
 async def delete_entry(
     entry_id: int,

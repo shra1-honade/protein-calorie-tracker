@@ -1,13 +1,14 @@
-import { Trash2 } from 'lucide-react';
+import { Trash2, Edit2 } from 'lucide-react';
 import { FoodEntry } from '../types';
 import { MEAL_ORDER, MEAL_CONFIGS, formatTime } from '../utils/mealHelpers';
 
 interface Props {
   entries: FoodEntry[];
   onDelete: (id: number) => void;
+  onEdit: (entry: FoodEntry) => void;
 }
 
-export default function MealList({ entries, onDelete }: Props) {
+export default function MealList({ entries, onDelete, onEdit }: Props) {
   if (entries.length === 0) {
     return (
       <p className="text-center text-gray-400 py-8">
@@ -51,12 +52,20 @@ export default function MealList({ entries, onDelete }: Props) {
                     {entry.serving_qty !== 1 && ` · ${entry.serving_qty}x`}
                   </p>
                 </div>
-                <button
-                  onClick={() => onDelete(entry.id)}
-                  className="text-gray-400 hover:text-red-500 transition-colors p-1 ml-2"
-                >
-                  <Trash2 size={16} />
-                </button>
+                <div className="flex gap-1 ml-2">
+                  <button
+                    onClick={() => onEdit(entry)}
+                    className="text-gray-400 hover:text-primary-500 transition-colors p-1"
+                  >
+                    <Edit2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => onDelete(entry.id)}
+                    className="text-gray-400 hover:text-red-500 transition-colors p-1"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
             ))}
           </div>
