@@ -120,7 +120,7 @@ erDiagram
 ## 4. Authentication Flow
 
 ```mermaid
-%%{init: {'theme':'base', 'themeVariables': { 'background':'#FFFFFF','primaryColor':'#E3F2FD','primaryTextColor':'#000','primaryBorderColor':'#1976D2','actorBkg':'#E3F2FD','actorBorder':'#1976D2','actorTextColor':'#000','actorLineColor':'#1976D2','signalColor':'#424242','signalTextColor':'#000','labelBoxBkgColor':'#FFFFFF','labelBoxBorderColor':'#424242','labelTextColor':'#000','loopTextColor':'#000','noteBkgColor':'#FFEBEE','noteBorderColor':'#D32F2F','noteTextColor':'#000','activationBkgColor':'#FFE0B2','activationBorderColor':'#F57C00','sequenceNumberColor':'#FFFFFF'}}}%%
+%%{init: {'theme':'neutral'}}%%
 sequenceDiagram
     participant U as 👤 User
     participant F as 🌐 Frontend
