@@ -39,10 +39,11 @@ async def get_daily(
 
 @router.get("/weekly", response_model=WeeklyResponse)
 async def get_weekly(
+    today_str: str = Query(None, alias="today", description="YYYY-MM-DD client local date"),
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
-    today = date.today()
+    today = date.fromisoformat(today_str) if today_str else date.today()
     days = []
 
     for i in range(6, -1, -1):

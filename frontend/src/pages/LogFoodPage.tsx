@@ -30,6 +30,8 @@ export default function LogFoodPage() {
     fdc_id?: string;
     serving_qty?: number;
   }) => {
+    const now = new Date();
+    const localISO = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, -1);
     await api.post('/food/log', {
       food_name: data.food_name,
       protein_g: data.protein_g,
@@ -37,6 +39,7 @@ export default function LogFoodPage() {
       meal_type: data.meal_type ?? 'snack',
       fdc_id: data.fdc_id,
       serving_qty: data.serving_qty ?? 1,
+      logged_at: localISO,
     });
     showToast(`Logged ${data.food_name}`);
   };

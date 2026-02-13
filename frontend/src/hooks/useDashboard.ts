@@ -12,7 +12,7 @@ export function useDashboard(date: string) {
     try {
       const [dailyRes, weeklyRes] = await Promise.all([
         api.get<DailySummary>('/dashboard/daily', { params: { date } }),
-        api.get<WeeklyResponse>('/dashboard/weekly'),
+        api.get<WeeklyResponse>('/dashboard/weekly', { params: { today: date } }),
       ]);
       setDaily(dailyRes.data);
       setWeekly(weeklyRes.data);
