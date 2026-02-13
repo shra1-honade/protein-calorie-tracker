@@ -8,8 +8,8 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 class AdminStats(BaseModel):
     total_users: int
-    new_users_today: int
-    new_users_this_week: int
+    new_users_last_24h: int
+    new_users_last_7_days: int
     total_food_entries: int
     total_groups: int
     active_users_last_7_days: int
@@ -25,20 +25,20 @@ async def get_admin_stats(
     """Get platform-wide statistics (requires authentication)"""
 
     now = datetime.utcnow()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    week_start = today_start - timedelta(days=7)
+    last_24h = now - timedelta(hours=24)
+    last_7_days = now - timedelta(days=7)
 
     # Total users
     total_users = await db.fetchval("SELECT COUNT(*) FROM users")
 
-    # New users today
-    new_users_today = await db.fetchval(
-        "SELECT COUNT(*) FROM users WHERE created_at >= $1", today_start
+    # New users in last 24 hours
+    new_users_last_24h = await db.fetchval(
+        "SELECT COUNT(*) FROM users WHERE created_at >= $1", last_24h
     )
 
-    # New users this week
-    new_users_this_week = await db.fetchval(
-        "SELECT COUNT(*) FROM users WHERE created_at >= $1", week_start
+    # New users in last 7 days
+    new_users_last_7_days = await db.fetchval(
+        "SELECT COUNT(*) FROM users WHERE created_at >= $1", last_7_days
     )
 
     # Total food entries
@@ -52,7 +52,7 @@ async def get_admin_stats(
         """SELECT COUNT(DISTINCT user_id)
            FROM food_entries
            WHERE logged_at >= $1""",
-        week_start,
+        last_7_days,
     )
 
     # Total nutrition logged all time
@@ -65,8 +65,8 @@ async def get_admin_stats(
 
     return AdminStats(
         total_users=total_users,
-        new_users_today=new_users_today,
-        new_users_this_week=new_users_this_week,
+        new_users_last_24h=new_users_last_24h,
+        new_users_last_7_days=new_users_last_7_days,
         total_food_entries=total_food_entries,
         total_groups=total_groups,
         active_users_last_7_days=active_users_last_7_days,
