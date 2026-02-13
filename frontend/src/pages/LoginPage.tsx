@@ -17,18 +17,64 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-6">
-      <div className="text-center space-y-6 max-w-sm w-full">
-        <div className="text-6xl">💪</div>
-        <h1 className="text-3xl font-bold text-gray-900">Protein Tracker</h1>
-        <p className="text-gray-500">
-          Track your protein & calories, compete with friends, and hit your
-          nutrition goals.
+    <div className="min-h-screen bg-gradient-to-b from-primary-900 via-primary-800 to-gray-900 flex flex-col">
+      {/* Hero Section */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8">
+        {/* Animated icon cluster */}
+        <div className="relative mb-8">
+          <div className="w-28 h-28 bg-primary-500/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-primary-400/30">
+            <span className="text-6xl">🥗</span>
+          </div>
+          <span className="absolute -top-2 -right-2 text-3xl animate-bounce">💪</span>
+          <span className="absolute -bottom-1 -left-3 text-2xl animate-pulse">🔥</span>
+        </div>
+
+        <h1 className="text-4xl font-extrabold text-white text-center leading-tight">
+          Protein &<br />Calorie Tracker
+        </h1>
+        <p className="mt-3 text-primary-200 text-center max-w-xs text-lg">
+          Fuel your gains. Track every bite. Crush your goals.
         </p>
 
+        {/* Feature cards */}
+        <div className="mt-10 w-full max-w-sm space-y-3">
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+            <div className="w-10 h-10 bg-primary-500/30 rounded-lg flex items-center justify-center shrink-0">
+              <span className="text-xl">📸</span>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">AI Food Detection</p>
+              <p className="text-primary-300 text-xs">Snap a photo, get instant nutrition info</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+            <div className="w-10 h-10 bg-primary-500/30 rounded-lg flex items-center justify-center shrink-0">
+              <span className="text-xl">📊</span>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Daily & Weekly Stats</p>
+              <p className="text-primary-300 text-xs">Visualize your protein and calorie trends</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10">
+            <div className="w-10 h-10 bg-primary-500/30 rounded-lg flex items-center justify-center shrink-0">
+              <span className="text-xl">🏆</span>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm">Compete with Friends</p>
+              <p className="text-primary-300 text-xs">Create groups and climb the leaderboard</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="px-6 pb-10 pt-4">
         <button
           onClick={handleGoogleLogin}
-          className="w-full flex items-center justify-center gap-3 bg-white border border-gray-300 rounded-lg px-4 py-3 font-medium text-gray-700 hover:bg-gray-50 transition-colors shadow-sm"
+          className="w-full max-w-sm mx-auto flex items-center justify-center gap-3 bg-white rounded-xl px-4 py-4 font-semibold text-gray-800 hover:bg-gray-100 active:scale-[0.98] transition-all shadow-lg shadow-black/20"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -48,8 +94,11 @@ export default function LoginPage() {
               d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
             />
           </svg>
-          Sign in with Google
+          Continue with Google
         </button>
+        <p className="text-center text-primary-400/60 text-xs mt-4">
+          Free forever. No credit card needed.
+        </p>
       </div>
     </div>
   );
