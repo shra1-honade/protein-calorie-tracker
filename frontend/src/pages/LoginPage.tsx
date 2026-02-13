@@ -20,13 +20,48 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-b from-primary-900 via-primary-800 to-gray-900 flex flex-col">
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pt-12 pb-8">
-        {/* Animated icon cluster */}
+        {/* Awesome animated logo */}
         <div className="relative mb-8">
-          <div className="w-28 h-28 bg-primary-500/20 rounded-full flex items-center justify-center backdrop-blur-sm border border-primary-400/30">
-            <span className="text-6xl">🥗</span>
+          {/* Pulsing glow background */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500 via-green-500 to-orange-500 rounded-full blur-2xl opacity-30 animate-pulse" />
+
+          {/* Main logo container */}
+          <div className="relative w-32 h-32 flex items-center justify-center">
+            {/* Rotating border rings */}
+            <div className="absolute inset-0 rounded-full border-4 border-transparent bg-gradient-to-r from-primary-400 via-green-400 to-orange-400 animate-spin" style={{ animationDuration: '3s' }} />
+            <div className="absolute inset-2 rounded-full border-4 border-transparent bg-gradient-to-l from-orange-400 via-green-400 to-primary-400 animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }} />
+
+            {/* Center icon */}
+            <div className="relative w-24 h-24 bg-gray-900 rounded-full flex items-center justify-center border-4 border-gray-800">
+              {/* Custom SVG logo - Dumbbell with flame */}
+              <svg viewBox="0 0 64 64" className="w-16 h-16">
+                {/* Dumbbell */}
+                <g className="text-primary-400">
+                  {/* Left weight */}
+                  <rect x="4" y="20" width="12" height="24" rx="2" fill="currentColor" />
+                  {/* Right weight */}
+                  <rect x="48" y="20" width="12" height="24" rx="2" fill="currentColor" />
+                  {/* Bar */}
+                  <rect x="16" y="28" width="32" height="8" rx="1" fill="currentColor" />
+                  {/* Grips */}
+                  <line x1="26" y1="28" x2="26" y2="36" stroke="#1e293b" strokeWidth="1.5" />
+                  <line x1="32" y1="28" x2="32" y2="36" stroke="#1e293b" strokeWidth="1.5" />
+                  <line x1="38" y1="28" x2="38" y2="36" stroke="#1e293b" strokeWidth="1.5" />
+                </g>
+
+                {/* Flame accent */}
+                <g className="text-orange-500">
+                  <path d="M 52 12 Q 54 8 52 4 Q 50 6 52 12" fill="currentColor" className="animate-pulse" style={{ animationDuration: '1.5s' }} />
+                  <path d="M 56 10 Q 58 7 56 4 Q 54 6 56 10" fill="#fbbf24" className="animate-pulse" style={{ animationDuration: '1.2s' }} />
+                </g>
+
+                {/* Protein molecule dots */}
+                <circle cx="12" cy="50" r="2" fill="#22c55e" className="animate-bounce" style={{ animationDelay: '0s', animationDuration: '1s' }} />
+                <circle cx="20" cy="52" r="2" fill="#22c55e" className="animate-bounce" style={{ animationDelay: '0.2s', animationDuration: '1s' }} />
+                <circle cx="28" cy="50" r="2" fill="#22c55e" className="animate-bounce" style={{ animationDelay: '0.4s', animationDuration: '1s' }} />
+              </svg>
+            </div>
           </div>
-          <span className="absolute -top-2 -right-2 text-3xl animate-bounce">💪</span>
-          <span className="absolute -bottom-1 -left-3 text-2xl animate-pulse">🔥</span>
         </div>
 
         <h1 className="text-4xl font-extrabold text-white text-center leading-tight">
