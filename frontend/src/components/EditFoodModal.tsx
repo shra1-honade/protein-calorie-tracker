@@ -51,8 +51,9 @@ export default function EditFoodModal({ entry, open, onClose, onSave }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 relative">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
+      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6 my-auto">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
@@ -83,6 +84,7 @@ export default function EditFoodModal({ entry, open, onClose, onSave }: Props) {
                 value={proteinG}
                 onChange={(e) => setProteinG(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                inputMode="decimal"
                 required
               />
             </div>
@@ -94,6 +96,7 @@ export default function EditFoodModal({ entry, open, onClose, onSave }: Props) {
                 value={calories}
                 onChange={(e) => setCalories(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                inputMode="numeric"
                 required
               />
             </div>
@@ -108,6 +111,7 @@ export default function EditFoodModal({ entry, open, onClose, onSave }: Props) {
               value={servingQty}
               onChange={(e) => setServingQty(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              inputMode="decimal"
               required
             />
           </div>

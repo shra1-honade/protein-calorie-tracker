@@ -31,39 +31,41 @@ export default function GoalSettingModal({ open, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto">
       <div className="fixed inset-0 bg-black/40" onClick={onClose} />
-      <div className="relative bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm p-6 space-y-4">
+      <div className="relative bg-white rounded-2xl w-full max-w-sm p-6 space-y-4 my-auto shadow-xl">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold">Set Daily Goals</h2>
-          <button onClick={onClose} className="text-gray-400">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Protein Goal (g)
             </label>
             <input
               type="number"
               value={protein}
               onChange={(e) => setProtein(e.target.value)}
-              className="input mt-1"
+              className="input"
               min="0"
+              inputMode="numeric"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Calorie Goal
             </label>
             <input
               type="number"
               value={calories}
               onChange={(e) => setCalories(e.target.value)}
-              className="input mt-1"
+              className="input"
               min="0"
+              inputMode="numeric"
             />
           </div>
         </div>
