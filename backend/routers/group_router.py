@@ -113,6 +113,7 @@ async def list_groups(
 async def get_leaderboard(
     group_id: int,
     period: str = Query("daily", regex="^(daily|weekly)$"),
+    today_str: str = Query(None, alias="today", description="YYYY-MM-DD client local date"),
     user: dict = Depends(get_current_user),
     db=Depends(get_db),
 ):
@@ -124,14 +125,16 @@ async def get_leaderboard(
     if not member:
         raise HTTPException(status_code=403, detail="Not a member of this group")
 
+    today = date.fromisoformat(today_str) if today_str else date.today()
+
     if period == "daily":
         date_clause = "DATE(fe.logged_at) = $1"
-        date_params = [date.today()]
+        date_params = [today]
         group_param = "$2"
     else:
-        start = date.today() - timedelta(days=6)
+        start = today - timedelta(days=6)
         date_clause = "DATE(fe.logged_at) BETWEEN $1 AND $2"
-        date_params = [start, date.today()]
+        date_params = [start, today]
         group_param = "$3"
 
     rows = await db.fetch(

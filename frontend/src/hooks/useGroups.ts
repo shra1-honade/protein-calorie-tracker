@@ -37,6 +37,10 @@ export function useGroups() {
   return { groups, loading, refresh, createGroup, joinGroup };
 }
 
+function toLocalDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 export function useLeaderboard(groupId: number | null, period: 'daily' | 'weekly') {
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,9 +49,10 @@ export function useLeaderboard(groupId: number | null, period: 'daily' | 'weekly
     if (!groupId) return;
     setLoading(true);
     try {
+      const today = toLocalDateStr(new Date());
       const { data } = await api.get<LeaderboardEntry[]>(
         `/groups/${groupId}/leaderboard`,
-        { params: { period } }
+        { params: { period, today } }
       );
       setEntries(data);
     } catch {
