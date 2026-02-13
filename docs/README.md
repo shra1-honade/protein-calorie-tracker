@@ -1,58 +1,38 @@
-# Architecture Diagrams
+# Architecture Documentation
 
-This directory contains detailed Excalidraw architecture diagrams for the Protein & Calorie Tracker PWA.
+This directory contains architecture documentation for the Protein & Calorie Tracker PWA.
 
-## How to View
+## 📖 Main Documentation
 
-1. **Online**: Go to [excalidraw.com](https://excalidraw.com) and use File → Open to load any `.excalidraw.json` file
-2. **VS Code**: Install the [Excalidraw extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
-3. **Desktop**: Download [Excalidraw Desktop](https://github.com/excalidraw/excalidraw-desktop/releases)
+**[ARCHITECTURE.md](ARCHITECTURE.md)** - Comprehensive architecture guide with Mermaid diagrams that render on GitHub:
+- System overview
+- Backend architecture (FastAPI routers)
+- Database schema (PostgreSQL)
+- Authentication flow (OAuth + JWT)
+- Frontend architecture (React + Vite)
+- Deployment & CI/CD
+- Technology stack
+- Key patterns & gotchas
+
+## 🎨 Excalidraw Diagrams (Editable)
+
+For **editable** diagrams in VS Code:
+1. Install the [Excalidraw extension](https://marketplace.visualstudio.com/items?itemName=pomdtr.excalidraw-editor)
+2. Open any `.excalidraw` file in the docs folder
 
 ## Diagrams
 
-### 1. architecture-overview.excalidraw.json
-**High-level system architecture**
-- User → Vercel (frontend) → Render (backend) → Neon (PostgreSQL)
-- Google OAuth & Gemini Vision API integrations
-- Total cost: $0/month (all free tiers)
-- Auto-deploy on git push to master
+### 1. [1-system-overview.excalidraw](1-system-overview.excalidraw)
+System architecture: User → Vercel → Render → Neon + Google APIs
 
-### 2. backend-architecture.excalidraw.json
-**FastAPI backend structure**
-- 4 modular routers: auth, food, dashboard, groups
-- Core modules: database.py, dependencies.py, auth.py, gemini_client.py, seed.py
-- Request flow: Router → Depends(get_current_user) → Depends(get_db) → Business logic → PostgreSQL
-- asyncpg connection pooling with numbered parameters ($1, $2...)
+### 2. [2-backend-routers.excalidraw](2-backend-routers.excalidraw)
+FastAPI routers, dependencies, and database connection pool
 
-### 3. frontend-architecture.excalidraw.json
-**React + Vite PWA structure**
-- Pages: Login, Dashboard, LogFood, Groups, Leaderboard
-- Components: Layout, Camera, QuickAdd, GoalModal, ShareLink
-- Hooks & Context: AuthContext, useDashboard, api.ts (Axios + JWT interceptor)
-- Data flow: Page → Hook → api.ts → Vite proxy → Backend
+### 3. [3-database-schema.excalidraw](3-database-schema.excalidraw)
+PostgreSQL tables, relationships, and foreign keys
 
-### 4. database-schema.excalidraw.json
-**PostgreSQL database design**
-- Tables: users, food_entries, common_foods, groups, group_members, schema_version
-- Foreign key relationships and indexes
-- TIMESTAMPTZ for all timestamps (timezone-aware)
-- asyncpg type requirements (date objects, not ISO strings)
-
-### 5. auth-flow.excalidraw.json
-**OAuth + JWT authentication flow**
-- 10-step flow from login click to authenticated dashboard
-- Google OAuth code exchange
-- JWT generation (HS256, 7-day expiry)
-- Protected route validation via Depends(get_current_user)
-- Logout flow
-
-### 6. deployment-flow.excalidraw.json
-**CI/CD and production architecture**
-- Local dev: Vite proxy /api → localhost:8000
-- Git push → GitHub webhook → Vercel + Render auto-deploy
-- Production request flow with cold-start behavior
-- Environment variables setup
-- vercel.json rewrites for API proxy and SPA fallback
+### 4. [4-auth-flow.excalidraw](4-auth-flow.excalidraw)
+Google OAuth + JWT authentication flow (6 steps)
 
 ## Key Technologies
 
