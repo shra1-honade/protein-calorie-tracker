@@ -1,26 +1,21 @@
 import { useAdminStats } from '../hooks/useAdminStats';
-import Layout from '../components/Layout';
 
 export default function AdminPage() {
   const { stats, loading, error } = useAdminStats();
 
   if (loading) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Loading stats...</div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-gray-500">Loading stats...</div>
+      </div>
     );
   }
 
   if (error) {
     return (
-      <Layout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-red-600">{error}</div>
-        </div>
-      </Layout>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-red-600">{error}</div>
+      </div>
     );
   }
 
@@ -86,12 +81,11 @@ export default function AdminPage() {
   ];
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Platform Statistics</h1>
-          <p className="text-gray-600">Real-time analytics for your protein tracking platform</p>
-        </div>
+    <div className="max-w-7xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Platform Statistics</h1>
+        <p className="text-gray-600">Real-time analytics for your protein tracking platform</p>
+      </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {statCards.map((card) => (
@@ -137,6 +131,5 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    </Layout>
   );
 }
