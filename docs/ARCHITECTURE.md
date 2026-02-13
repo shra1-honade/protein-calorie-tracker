@@ -5,17 +5,18 @@ This document provides visual architecture diagrams for the Protein & Calorie Tr
 ## 1. System Overview
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#e3f2fd','primaryTextColor':'#000','primaryBorderColor':'#1976d2','lineColor':'#424242','secondaryColor':'#f3e5f5','tertiaryColor':'#e8f5e9'}}}%%
 graph LR
     User["👤 User<br/>(Browser/Mobile)"] -->|HTTPS| Vercel["🌐 Vercel<br/>React + Vite PWA<br/>vercel.app"]
     Vercel -->|"/api/* proxy"| Render["🐍 Render<br/>FastAPI Backend<br/>.onrender.com<br/>(15min sleep)"]
     Render -->|asyncpg pool| Neon["🗄️ Neon<br/>PostgreSQL<br/>0.5GB Free"]
     Render -.->|OAuth + Vision API| Google["🔐 Google<br/>OAuth<br/>Gemini Vision"]
 
-    style User fill:#a5d8ff,stroke:#1971c2
-    style Vercel fill:#b2f2bb,stroke:#2f9e44
-    style Render fill:#ffec99,stroke:#f08c00
-    style Neon fill:#ffc9c9,stroke:#c92a2a
-    style Google fill:#d0bfff,stroke:#6741d9
+    style User fill:#E3F2FD,stroke:#1976D2,stroke-width:3px,color:#000
+    style Vercel fill:#E8F5E9,stroke:#388E3C,stroke-width:3px,color:#000
+    style Render fill:#FFF9C4,stroke:#F57C00,stroke-width:3px,color:#000
+    style Neon fill:#FFEBEE,stroke:#D32F2F,stroke-width:3px,color:#000
+    style Google fill:#F3E5F5,stroke:#7B1FA2,stroke-width:3px,color:#000
 ```
 
 **💰 Total Cost: $0/month** (All free tiers)
@@ -26,6 +27,7 @@ graph LR
 ## 2. Backend Architecture
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#fff9c4','primaryTextColor':'#000','primaryBorderColor':'#f57c00','lineColor':'#616161'}}}%%
 graph TD
     Main["main.py<br/>FastAPI App<br/>Lifespan Manager"] --> Auth["auth_router<br/>/auth/*<br/>OAuth + JWT"]
     Main --> Food["food_router<br/>/food/*<br/>Log/Camera/Detect"]
@@ -40,13 +42,14 @@ graph TD
     Deps --> DB["database.py<br/>asyncpg pool<br/>init_db()<br/>migrations"]
     DB --> Postgres[("PostgreSQL<br/>(Neon)")]
 
-    style Main fill:#fff9db,stroke:#f08c00,stroke-width:3px
-    style Auth fill:#d0bfff,stroke:#6741d9
-    style Food fill:#b2f2bb,stroke:#2f9e44
-    style Dashboard fill:#a5d8ff,stroke:#1971c2
-    style Groups fill:#ffc9c9,stroke:#c92a2a
-    style Deps fill:#ffd8a8,stroke:#e67700
-    style DB fill:#ffe3e3,stroke:#e03131,stroke-width:3px
+    style Main fill:#FFF9C4,stroke:#F57C00,stroke-width:4px,color:#000
+    style Auth fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    style Food fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
+    style Dashboard fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    style Groups fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#000
+    style Deps fill:#FFE0B2,stroke:#EF6C00,stroke-width:2px,color:#000
+    style DB fill:#FFCDD2,stroke:#C62828,stroke-width:4px,color:#000
+    style Postgres fill:#F5F5F5,stroke:#424242,stroke-width:2px,color:#000
 ```
 
 **Request Flow:**
@@ -117,12 +120,13 @@ erDiagram
 ## 4. Authentication Flow
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'actorBkg':'#E3F2FD','actorBorder':'#1976D2','actorTextColor':'#000','signalColor':'#424242','signalTextColor':'#000','labelBoxBkgColor':'#FFF9C4','labelBoxBorderColor':'#F57C00','labelTextColor':'#000','loopTextColor':'#000','noteBkgColor':'#FFEBEE','noteBorderColor':'#D32F2F','noteTextColor':'#000'}}}%%
 sequenceDiagram
-    participant U as User
-    participant F as Frontend
-    participant B as Backend
-    participant G as Google OAuth
-    participant D as Database
+    participant U as 👤 User
+    participant F as 🌐 Frontend
+    participant B as 🐍 Backend
+    participant G as 🔐 Google OAuth
+    participant D as 🗄️ Database
 
     U->>F: Click "Continue with Google"
     F->>B: GET /auth/google/login
@@ -138,7 +142,7 @@ sequenceDiagram
     B->>F: Redirect /auth/callback?token=JWT
     F->>F: Store in localStorage
     F->>F: Axios interceptor adds Bearer header
-    F->>B: API requests with Authorization: Bearer <JWT>
+    F->>B: API requests with Authorization: Bearer JWT
     B->>B: Depends(get_current_user) validates JWT
     B->>D: SELECT user WHERE id = decoded_user_id
     D->>B: User data
@@ -158,6 +162,7 @@ Route handler receives authenticated user
 ## 5. Frontend Architecture
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#e8f5e9','primaryTextColor':'#000','primaryBorderColor':'#388e3c','lineColor':'#616161'}}}%%
 graph TD
     App["App.tsx<br/>React Router<br/>AuthProvider"] --> Routes{{"Routes"}}
 
@@ -173,13 +178,16 @@ graph TD
 
     API -->|"/api/*"| Vite["Vite Proxy<br/>(dev: localhost:8000)<br/>(prod: Render)"]
 
-    style App fill:#fff9db,stroke:#f08c00,stroke-width:3px
-    style Login fill:#d0bfff,stroke:#6741d9
-    style Dashboard fill:#a5d8ff,stroke:#1971c2
-    style LogFood fill:#b2f2bb,stroke:#2f9e44
-    style Groups fill:#ffec99,stroke:#f08c00
-    style Leader fill:#ffc9c9,stroke:#c92a2a
-    style API fill:#fff9db,stroke:#f59f00,stroke-width:3px
+    style App fill:#FFF9C4,stroke:#F57C00,stroke-width:4px,color:#000
+    style Routes fill:#F5F5F5,stroke:#9E9E9E,stroke-width:2px,color:#000
+    style Login fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    style Dashboard fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    style LogFood fill:#E8F5E9,stroke:#388E3C,stroke-width:2px,color:#000
+    style Groups fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
+    style Leader fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#000
+    style Hooks fill:#E0F2F1,stroke:#00796B,stroke-width:2px,color:#000
+    style API fill:#FFE0B2,stroke:#EF6C00,stroke-width:4px,color:#000
+    style Vite fill:#E8EAF6,stroke:#3F51B5,stroke-width:2px,color:#000
 ```
 
 **Data Flow:**
@@ -194,6 +202,7 @@ Pydantic types → React state update → UI re-render
 ## 6. Deployment & CI/CD
 
 ```mermaid
+%%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#e8f5e9','primaryTextColor':'#000','primaryBorderColor':'#388e3c','lineColor':'#424242'}}}%%
 graph LR
     Dev["💻 Local Dev<br/>npm run dev :5173<br/>uvicorn :8000"] -->|git push| GitHub["📦 GitHub<br/>master branch"]
 
@@ -206,11 +215,12 @@ graph LR
 
     Render --> Neon["🗄️ Neon PostgreSQL<br/>Always-on<br/>No deploys"]
 
-    style Dev fill:#e7f5ff,stroke:#1971c2
-    style GitHub fill:#fff9db,stroke:#f59f00,stroke-width:3px
-    style Vercel fill:#b2f2bb,stroke:#2f9e44,stroke-width:3px
-    style Render fill:#ffec99,stroke:#f08c00,stroke-width:3px
-    style Neon fill:#ffc9c9,stroke:#c92a2a
+    style Dev fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    style GitHub fill:#FFF9C4,stroke:#F57C00,stroke-width:4px,color:#000
+    style Vercel fill:#E8F5E9,stroke:#388E3C,stroke-width:4px,color:#000
+    style Render fill:#FFE0B2,stroke:#EF6C00,stroke-width:4px,color:#000
+    style User fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    style Neon fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#000
 ```
 
 **Production Request Flow:**
