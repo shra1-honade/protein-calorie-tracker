@@ -28,8 +28,16 @@ async def get_admin_stats(
     last_24h = now - timedelta(hours=24)
     last_7_days = now - timedelta(days=7)
 
+    # Debug: Check if db connection is working
+    try:
+        test_query = await db.fetchval("SELECT 1")
+        print(f"DEBUG: DB connection test: {test_query}")
+    except Exception as e:
+        print(f"DEBUG: DB connection error: {e}")
+
     # Total users
     total_users = await db.fetchval("SELECT COUNT(*) FROM users")
+    print(f"DEBUG: total_users query result: {total_users}")
 
     # New users in last 24 hours
     new_users_last_24h = await db.fetchval(
