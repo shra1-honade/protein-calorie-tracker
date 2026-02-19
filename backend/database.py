@@ -1,7 +1,7 @@
 import asyncpg
 from config import get_settings
 
-CURRENT_SCHEMA_VERSION = 1
+CURRENT_SCHEMA_VERSION = 2
 
 pool: asyncpg.Pool = None
 
@@ -47,6 +47,7 @@ async def init_db():
                 avatar_url VARCHAR,
                 protein_goal REAL DEFAULT 150,
                 calorie_goal REAL DEFAULT 2000,
+                carb_goal REAL DEFAULT 200,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         """)
@@ -56,6 +57,7 @@ async def init_db():
                 name VARCHAR NOT NULL,
                 protein_g REAL NOT NULL,
                 calories REAL NOT NULL,
+                carbs_g REAL DEFAULT 0,
                 category VARCHAR NOT NULL,
                 icon VARCHAR NOT NULL,
                 sort_order INTEGER DEFAULT 0
@@ -68,6 +70,7 @@ async def init_db():
                 food_name VARCHAR NOT NULL,
                 protein_g REAL NOT NULL,
                 calories REAL NOT NULL,
+                carbs_g REAL DEFAULT 0,
                 fdc_id VARCHAR,
                 meal_type VARCHAR DEFAULT 'snack',
                 serving_qty REAL DEFAULT 1.0,
@@ -114,10 +117,24 @@ async def init_db():
                 )
 
 
+async def migrate_v1_to_v2(conn):
+    """Add carbs_g to food_entries and common_foods; add carb_goal to users."""
+    await conn.execute(
+        "ALTER TABLE food_entries ADD COLUMN IF NOT EXISTS carbs_g REAL DEFAULT 0"
+    )
+    await conn.execute(
+        "ALTER TABLE common_foods ADD COLUMN IF NOT EXISTS carbs_g REAL DEFAULT 0"
+    )
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS carb_goal REAL DEFAULT 200"
+    )
+    print("Migrated schema v1 → v2: added carbs_g and carb_goal columns")
+
+
 async def run_migrations(conn, from_version: int, to_version: int):
     """Run numbered migrations sequentially. Add new migrations here."""
     migrations = {
-        # Example: 2: migrate_v1_to_v2,
+        2: migrate_v1_to_v2,
     }
     for v in range(from_version + 1, to_version + 1):
         if v in migrations:

@@ -6,11 +6,12 @@ interface DetectedFood {
   name: string;
   protein_g: number;
   calories: number;
+  carbs_g: number;
   confidence: number;
 }
 
 interface Props {
-  onDetect: (foods: DetectedFood[], totalProtein: number, totalCalories: number) => void;
+  onDetect: (foods: DetectedFood[], totalProtein: number, totalCalories: number, totalCarbs: number) => void;
 }
 
 export default function CameraFoodDetector({ onDetect }: Props) {
@@ -95,10 +96,11 @@ export default function CameraFoodDetector({ onDetect }: Props) {
         foods: DetectedFood[];
         total_protein: number;
         total_calories: number;
+        total_carbs: number;
       }>('/food/detect', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      onDetect(data.foods, data.total_protein, data.total_calories);
+      onDetect(data.foods, data.total_protein, data.total_calories, data.total_carbs ?? 0);
     } catch {
       alert('Failed to analyze image. Try again.');
     } finally {

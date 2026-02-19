@@ -26,13 +26,16 @@ async def get_daily(
 
     total_protein = sum(e.protein_g for e in entries)
     total_calories = sum(e.calories for e in entries)
+    total_carbs = sum(e.carbs_g for e in entries)
 
     return DailySummary(
         date=target_date.isoformat(),
         total_protein=round(total_protein, 1),
         total_calories=round(total_calories, 1),
+        total_carbs=round(total_carbs, 1),
         protein_goal=user["protein_goal"],
         calorie_goal=user["calorie_goal"],
+        carb_goal=user["carb_goal"],
         entries=entries,
     )
 
@@ -50,7 +53,8 @@ async def get_weekly(
         d = today - timedelta(days=i)
         row = await db.fetchrow(
             """SELECT COALESCE(SUM(protein_g), 0) as total_protein,
-                      COALESCE(SUM(calories), 0) as total_calories
+                      COALESCE(SUM(calories), 0) as total_calories,
+                      COALESCE(SUM(carbs_g), 0) as total_carbs
                FROM food_entries
                WHERE user_id = $1 AND DATE(logged_at) = $2""",
             user["id"], d,
@@ -60,6 +64,7 @@ async def get_weekly(
                 date=d.isoformat(),
                 total_protein=round(row['total_protein'], 1),
                 total_calories=round(row['total_calories'], 1),
+                total_carbs=round(row['total_carbs'], 1),
             )
         )
 
@@ -67,4 +72,5 @@ async def get_weekly(
         days=days,
         protein_goal=user["protein_goal"],
         calorie_goal=user["calorie_goal"],
+        carb_goal=user["carb_goal"],
     )

@@ -6,6 +6,7 @@ interface DetectedFood {
   name: string;
   protein_g: number;
   calories: number;
+  carbs_g: number;
   confidence: number;
 }
 
@@ -13,6 +14,7 @@ interface Props {
   foods: DetectedFood[];
   totalProtein: number;
   totalCalories: number;
+  totalCarbs: number;
   onConfirm: (mealType: MealType) => void;
   onRetry: () => void;
 }
@@ -21,6 +23,7 @@ export default function DetectedFoodsList({
   foods,
   totalProtein,
   totalCalories,
+  totalCarbs,
   onConfirm,
   onRetry,
 }: Props) {
@@ -35,7 +38,7 @@ export default function DetectedFoodsList({
               <div className="flex-1">
                 <p className="text-sm font-medium">{food.name}</p>
                 <p className="text-xs text-gray-500">
-                  {food.protein_g}g protein · {food.calories} cal
+                  {food.protein_g}g protein · {food.carbs_g}g carbs · {food.calories} cal
                 </p>
               </div>
               <span className="text-xs text-gray-400">
@@ -48,7 +51,7 @@ export default function DetectedFoodsList({
           <div className="flex justify-between font-semibold">
             <span>Total</span>
             <span>
-              {Math.round(totalProtein)}g protein · {Math.round(totalCalories)} cal
+              {Math.round(totalProtein)}g protein · {Math.round(totalCarbs)}g carbs · {Math.round(totalCalories)} cal
             </span>
           </div>
         </div>

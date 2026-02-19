@@ -12,6 +12,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
   const { user, refreshUser } = useAuth();
   const [protein, setProtein] = useState(String(user?.protein_goal ?? 150));
   const [calories, setCalories] = useState(String(user?.calorie_goal ?? 2000));
+  const [carbs, setCarbs] = useState(String(user?.carb_goal ?? 200));
   const [saving, setSaving] = useState(false);
 
   if (!open) return null;
@@ -22,6 +23,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
       await api.put('/auth/me/goals', {
         protein_goal: parseFloat(protein),
         calorie_goal: parseFloat(calories),
+        carb_goal: parseFloat(carbs),
       });
       await refreshUser();
       onClose();
@@ -63,6 +65,19 @@ export default function GoalSettingModal({ open, onClose }: Props) {
               type="number"
               value={calories}
               onChange={(e) => setCalories(e.target.value)}
+              className="input"
+              min="0"
+              inputMode="numeric"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Carb Goal (g)
+            </label>
+            <input
+              type="number"
+              value={carbs}
+              onChange={(e) => setCarbs(e.target.value)}
               className="input"
               min="0"
               inputMode="numeric"

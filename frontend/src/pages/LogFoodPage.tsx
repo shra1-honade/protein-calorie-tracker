@@ -31,7 +31,7 @@ export default function LogFoodPage() {
   const [tab, setTab] = useState<Tab>('quick');
   const [toast, setToast] = useState('');
   const [detectedFoods, setDetectedFoods] = useState<DetectedFood[] | null>(null);
-  const [detectedTotals, setDetectedTotals] = useState<{protein: number; calories: number} | null>(null);
+  const [detectedTotals, setDetectedTotals] = useState<{protein: number; calories: number; carbs: number} | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -42,6 +42,7 @@ export default function LogFoodPage() {
     food_name: string;
     protein_g: number;
     calories: number;
+    carbs_g?: number;
     meal_type?: string;
     fdc_id?: string;
     serving_qty?: number;
@@ -63,6 +64,7 @@ export default function LogFoodPage() {
       food_name: data.food_name,
       protein_g: data.protein_g,
       calories: data.calories,
+      carbs_g: data.carbs_g ?? 0,
       meal_type: data.meal_type ?? 'snack',
       fdc_id: data.fdc_id,
       serving_qty: data.serving_qty ?? 1,
@@ -76,6 +78,7 @@ export default function LogFoodPage() {
       food_name: food.name,
       protein_g: food.protein_g,
       calories: food.calories,
+      carbs_g: food.carbs_g,
       serving_qty: qty,
       meal_type: mealType,
     });
@@ -85,14 +88,15 @@ export default function LogFoodPage() {
     food_name: string;
     protein_g: number;
     calories: number;
+    carbs_g: number;
     meal_type: string;
   }) => {
     logFood(data);
   };
 
-  const handleCameraDetect = (foods: DetectedFood[], totalProtein: number, totalCalories: number) => {
+  const handleCameraDetect = (foods: DetectedFood[], totalProtein: number, totalCalories: number, totalCarbs: number) => {
     setDetectedFoods(foods);
-    setDetectedTotals({ protein: totalProtein, calories: totalCalories });
+    setDetectedTotals({ protein: totalProtein, calories: totalCalories, carbs: totalCarbs });
   };
 
   const handleConfirmDetection = async (mealType: MealType) => {
@@ -101,6 +105,7 @@ export default function LogFoodPage() {
       food_name: detectedFoods!.map(f => f.name).join(', '),
       protein_g: detectedTotals.protein,
       calories: detectedTotals.calories,
+      carbs_g: detectedTotals.carbs,
       fdc_id: 'camera-detected',
       meal_type: mealType,
     });
@@ -163,6 +168,7 @@ export default function LogFoodPage() {
             foods={detectedFoods}
             totalProtein={detectedTotals.protein}
             totalCalories={detectedTotals.calories}
+            totalCarbs={detectedTotals.carbs}
             onConfirm={handleConfirmDetection}
             onRetry={() => {
               setDetectedFoods(null);

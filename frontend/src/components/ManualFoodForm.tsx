@@ -5,6 +5,7 @@ interface Props {
     food_name: string;
     protein_g: number;
     calories: number;
+    carbs_g: number;
     meal_type: string;
   }) => void;
 }
@@ -13,6 +14,7 @@ export default function ManualFoodForm({ onSubmit }: Props) {
   const [name, setName] = useState('');
   const [protein, setProtein] = useState('');
   const [calories, setCalories] = useState('');
+  const [carbs, setCarbs] = useState('');
   const [mealType, setMealType] = useState('snack');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -22,11 +24,13 @@ export default function ManualFoodForm({ onSubmit }: Props) {
       food_name: name,
       protein_g: parseFloat(protein),
       calories: parseFloat(calories),
+      carbs_g: carbs ? parseFloat(carbs) : 0,
       meal_type: mealType,
     });
     setName('');
     setProtein('');
     setCalories('');
+    setCarbs('');
   };
 
   return (
@@ -39,7 +43,7 @@ export default function ManualFoodForm({ onSubmit }: Props) {
         className="input"
         required
       />
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <input
           type="number"
           value={protein}
@@ -59,6 +63,15 @@ export default function ManualFoodForm({ onSubmit }: Props) {
           step="1"
           min="0"
           required
+        />
+        <input
+          type="number"
+          value={carbs}
+          onChange={(e) => setCarbs(e.target.value)}
+          placeholder="Carbs (g)"
+          className="input"
+          step="0.1"
+          min="0"
         />
       </div>
       <select

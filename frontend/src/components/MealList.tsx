@@ -47,7 +47,7 @@ export default function MealList({ entries, onDelete }: Props) {
                   </p>
                   <p className="text-sm font-medium">{entry.food_name}</p>
                   <p className="text-xs text-gray-500">
-                    {entry.protein_g}g protein · {entry.calories} cal
+                    {entry.protein_g}g protein · {entry.carbs_g}g carbs · {entry.calories} cal
                     {entry.serving_qty !== 1 && ` · ${entry.serving_qty}x`}
                   </p>
                 </div>

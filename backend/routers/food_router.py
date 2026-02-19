@@ -42,12 +42,13 @@ async def log_food(
 
     new_id = await db.fetchval(
         """INSERT INTO food_entries
-           (user_id, food_name, protein_g, calories, fdc_id, meal_type, serving_qty, logged_at)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id""",
+           (user_id, food_name, protein_g, calories, carbs_g, fdc_id, meal_type, serving_qty, logged_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id""",
         user["id"],
         entry.food_name,
         entry.protein_g * entry.serving_qty,
         entry.calories * entry.serving_qty,
+        entry.carbs_g * entry.serving_qty,
         entry.fdc_id,
         entry.meal_type,
         entry.serving_qty,

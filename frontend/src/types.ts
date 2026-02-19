@@ -5,6 +5,7 @@ export interface User {
   avatar_url: string | null;
   protein_goal: number;
   calorie_goal: number;
+  carb_goal: number;
 }
 
 export interface CommonFood {
@@ -12,6 +13,7 @@ export interface CommonFood {
   name: string;
   protein_g: number;
   calories: number;
+  carbs_g: number;
   category: string;
   icon: string;
   sort_order: number;
@@ -22,6 +24,7 @@ export interface FoodEntry {
   food_name: string;
   protein_g: number;
   calories: number;
+  carbs_g: number;
   fdc_id: string | null;
   meal_type: string;
   serving_qty: number;
@@ -32,6 +35,7 @@ export interface DetectedFood {
   name: string;
   protein_g: number;
   calories: number;
+  carbs_g: number;
   confidence: number;
 }
 
@@ -39,8 +43,10 @@ export interface DailySummary {
   date: string;
   total_protein: number;
   total_calories: number;
+  total_carbs: number;
   protein_goal: number;
   calorie_goal: number;
+  carb_goal: number;
   entries: FoodEntry[];
 }
 
@@ -48,12 +54,14 @@ export interface WeeklyDay {
   date: string;
   total_protein: number;
   total_calories: number;
+  total_carbs: number;
 }
 
 export interface WeeklyResponse {
   days: WeeklyDay[];
   protein_goal: number;
   calorie_goal: number;
+  carb_goal: number;
 }
 
 export interface Group {

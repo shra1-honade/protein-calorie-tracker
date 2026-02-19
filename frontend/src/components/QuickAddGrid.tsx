@@ -85,7 +85,7 @@ export default function QuickAddGrid({ onAdd }: Props) {
                     {food.name}
                   </span>
                   <span className="text-xs text-gray-500">
-                    {food.protein_g}p · {food.calories}cal
+                    {food.protein_g}p · {food.carbs_g}c · {food.calories}cal
                   </span>
                   {adjusting === food.id && (
                     <div className="flex items-center gap-2 mt-1" onClick={(e) => e.stopPropagation()}>

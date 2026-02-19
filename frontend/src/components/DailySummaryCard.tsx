@@ -14,6 +14,10 @@ export default function DailySummaryCard({ summary, onEditGoals }: Props) {
     100,
     Math.round((summary.total_calories / summary.calorie_goal) * 100)
   );
+  const carbPct = Math.min(
+    100,
+    Math.round((summary.total_carbs / summary.carb_goal) * 100)
+  );
 
   const proteinColor =
     proteinPct >= 100 ? 'text-primary-600' : 'text-gray-700';
@@ -91,6 +95,21 @@ export default function DailySummaryCard({ summary, onEditGoals }: Props) {
               <div
                 className="h-full bg-amber-500 rounded-full transition-all duration-500"
                 style={{ width: `${caloriePct}%` }}
+              />
+            </div>
+          </div>
+
+          <div>
+            <div className="flex justify-between text-sm mb-1">
+              <span className="font-medium">Carbs</span>
+              <span className="text-gray-500">
+                {Math.round(summary.total_carbs)}g / {summary.carb_goal}g
+              </span>
+            </div>
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${carbPct}%` }}
               />
             </div>
           </div>

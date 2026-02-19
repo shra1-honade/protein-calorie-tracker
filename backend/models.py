@@ -11,11 +11,13 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = None
     protein_goal: float
     calorie_goal: float
+    carb_goal: float
 
 
 class GoalUpdate(BaseModel):
     protein_goal: Optional[float] = None
     calorie_goal: Optional[float] = None
+    carb_goal: Optional[float] = None
 
 
 # --- Food ---
@@ -24,6 +26,7 @@ class CommonFoodResponse(BaseModel):
     name: str
     protein_g: float
     calories: float
+    carbs_g: float
     category: str
     icon: str
     sort_order: int
@@ -33,6 +36,7 @@ class FoodLogRequest(BaseModel):
     food_name: str
     protein_g: float
     calories: float
+    carbs_g: float = 0.0
     fdc_id: Optional[str] = None
     meal_type: str = "snack"
     serving_qty: float = 1.0
@@ -44,6 +48,7 @@ class FoodEntryResponse(BaseModel):
     food_name: str
     protein_g: float
     calories: float
+    carbs_g: float
     fdc_id: Optional[str] = None
     meal_type: str
     serving_qty: float
@@ -55,8 +60,10 @@ class DailySummary(BaseModel):
     date: str
     total_protein: float
     total_calories: float
+    total_carbs: float
     protein_goal: float
     calorie_goal: float
+    carb_goal: float
     entries: list[FoodEntryResponse]
 
 
@@ -64,12 +71,14 @@ class WeeklyDay(BaseModel):
     date: str
     total_protein: float
     total_calories: float
+    total_carbs: float
 
 
 class WeeklyResponse(BaseModel):
     days: list[WeeklyDay]
     protein_goal: float
     calorie_goal: float
+    carb_goal: float
 
 
 # --- Groups ---

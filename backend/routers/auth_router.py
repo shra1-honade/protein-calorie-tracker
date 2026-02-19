@@ -65,6 +65,8 @@ async def update_goals(
         updates["protein_goal"] = goals.protein_goal
     if goals.calorie_goal is not None:
         updates["calorie_goal"] = goals.calorie_goal
+    if goals.carb_goal is not None:
+        updates["carb_goal"] = goals.carb_goal
 
     if not updates:
         return UserResponse(**user)
