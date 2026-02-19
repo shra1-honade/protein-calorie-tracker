@@ -12,9 +12,27 @@ class UserResponse(BaseModel):
     protein_goal: float
     calorie_goal: float
     carb_goal: float
+    age: Optional[int] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    sex: Optional[str] = None
+    activity_level: Optional[str] = None
+    goal_type: Optional[str] = None
 
 
 class GoalUpdate(BaseModel):
+    protein_goal: Optional[float] = None
+    calorie_goal: Optional[float] = None
+    carb_goal: Optional[float] = None
+
+
+class UserProfileUpdate(BaseModel):
+    age: Optional[int] = None
+    weight_kg: Optional[float] = None
+    height_cm: Optional[float] = None
+    sex: Optional[str] = None            # 'male' | 'female'
+    activity_level: Optional[str] = None  # 'sedentary'|'light'|'moderate'|'active'|'very_active'
+    goal_type: Optional[str] = None      # 'lose'|'maintain'|'gain'
     protein_goal: Optional[float] = None
     calorie_goal: Optional[float] = None
     carb_goal: Optional[float] = None

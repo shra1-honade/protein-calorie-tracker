@@ -1,7 +1,7 @@
 import asyncpg
 from config import get_settings
 
-CURRENT_SCHEMA_VERSION = 2
+CURRENT_SCHEMA_VERSION = 3
 
 pool: asyncpg.Pool = None
 
@@ -48,6 +48,12 @@ async def init_db():
                 protein_goal REAL DEFAULT 150,
                 calorie_goal REAL DEFAULT 2000,
                 carb_goal REAL DEFAULT 200,
+                age INTEGER,
+                weight_kg REAL,
+                height_cm REAL,
+                sex VARCHAR,
+                activity_level VARCHAR,
+                goal_type VARCHAR,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         """)
@@ -131,10 +137,22 @@ async def migrate_v1_to_v2(conn):
     print("Migrated schema v1 → v2: added carbs_g and carb_goal columns")
 
 
+async def migrate_v2_to_v3(conn):
+    """Add user profile fields for smart goal calculation."""
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS age INTEGER")
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS weight_kg REAL")
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS height_cm REAL")
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS sex VARCHAR")
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS activity_level VARCHAR")
+    await conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS goal_type VARCHAR")
+    print("Migrated schema v2 → v3: added user profile columns")
+
+
 async def run_migrations(conn, from_version: int, to_version: int):
     """Run numbered migrations sequentially. Add new migrations here."""
     migrations = {
         2: migrate_v1_to_v2,
+        3: migrate_v2_to_v3,
     }
     for v in range(from_version + 1, to_version + 1):
         if v in migrations:

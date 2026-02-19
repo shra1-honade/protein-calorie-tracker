@@ -6,6 +6,12 @@ export interface User {
   protein_goal: number;
   calorie_goal: number;
   carb_goal: number;
+  age?: number;
+  weight_kg?: number;
+  height_cm?: number;
+  sex?: string;
+  activity_level?: string;
+  goal_type?: string;
 }
 
 export interface CommonFood {

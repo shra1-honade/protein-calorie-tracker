@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 
 from auth import get_google_login_url, exchange_google_code, create_jwt
 from dependencies import get_db, get_current_user
-from models import UserResponse, GoalUpdate
+from models import UserResponse, GoalUpdate, UserProfileUpdate
 from config import get_settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -67,6 +67,37 @@ async def update_goals(
         updates["calorie_goal"] = goals.calorie_goal
     if goals.carb_goal is not None:
         updates["carb_goal"] = goals.carb_goal
+
+    if not updates:
+        return UserResponse(**user)
+
+    set_parts = []
+    params = []
+    for i, (k, v) in enumerate(updates.items(), 1):
+        set_parts.append(f"{k} = ${i}")
+        params.append(v)
+    set_clause = ", ".join(set_parts)
+    params.append(user["id"])
+    await db.execute(
+        f"UPDATE users SET {set_clause} WHERE id = ${len(params)}", *params
+    )
+
+    updated = await db.fetchrow("SELECT * FROM users WHERE id = $1", user["id"])
+    return UserResponse(**dict(updated))
+
+
+@router.put("/me/profile", response_model=UserResponse)
+async def update_profile(
+    profile: UserProfileUpdate,
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    updates = {}
+    for field in ("age", "weight_kg", "height_cm", "sex", "activity_level", "goal_type",
+                  "protein_goal", "calorie_goal", "carb_goal"):
+        val = getattr(profile, field)
+        if val is not None:
+            updates[field] = val
 
     if not updates:
         return UserResponse(**user)
