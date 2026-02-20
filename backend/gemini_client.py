@@ -164,11 +164,17 @@ INSTRUCTIONS:
 - Suggest meals ONLY for remaining/upcoming meal slots: {remaining_meals_str}
 - If no meals remain, provide a summary and tip for the day
 - Each meal must fit within the remaining macro budget
-- Use realistic, commonly available foods in India
 - Respect dietary preference strictly — no meat/fish for vegetarian, no animal products for vegan
 - Avoid ALL foods listed in dislikes
-- Provide exact gram quantities (e.g., "150g chicken breast")
-- Include macros for every food item
+
+RECIPE-LEVEL SUGGESTIONS (critical):
+- Suggest COMPLETE PREPARED DISHES, not raw ingredients
+  ✅ Good: "Masala Omelette", "Dal Tadka with Jeera Rice", "Paneer Bhurji", "Chicken Tikka", "Moong Dal Cheela", "Rajma Chawal", "Upma", "Curd Rice"
+  ❌ Bad: "3 eggs", "100g paneer", "150g chicken breast", "80g oats"
+- Each item in a meal is one dish or prepared food component (e.g., a curry, a bread, a side)
+- Express quantity as real serving sizes: "1 bowl", "2 rotis", "1 plate", "1 cup", "1 serving (~200g cooked)"
+- Calculate macros for the dish AS COOKED AND SERVED at that quantity — account for oils, spices, and cooking method in your calorie estimate
+- meal_tip: give a short, practical cooking or prep note (e.g., "Use 1 tsp ghee for tempering", "Grill instead of fry to save ~80 cal", "Add extra paneer to boost protein")
 
 Return ONLY a JSON object with this exact structure:
 {{
