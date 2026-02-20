@@ -12,6 +12,8 @@ export interface User {
   sex?: string;
   activity_level?: string;
   goal_type?: string;
+  dietary_preference?: string;
+  food_dislikes?: string | null;
 }
 
 export interface CommonFood {
@@ -84,4 +86,32 @@ export interface LeaderboardEntry {
   avatar_url: string | null;
   total_protein: number;
   rank: number;
+}
+
+export interface MealItem {
+  food: string;
+  quantity: string;
+  protein_g: number;
+  calories: number;
+  carbs_g: number;
+}
+
+export interface MealPlanMeal {
+  meal_type: string;
+  already_eaten: boolean;
+  items: MealItem[];
+  meal_protein: number;
+  meal_calories: number;
+  meal_carbs: number;
+  meal_tip: string;
+}
+
+export interface MealPlanResponse {
+  meal_plan: MealPlanMeal[];
+  day_summary: {
+    total_protein: number;
+    total_calories: number;
+    total_carbs: number;
+  };
+  nutritionist_note: string;
 }

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboard } from '../hooks/useDashboard';
+import { useMealPlan } from '../hooks/useMealPlan';
 import DailySummaryCard from '../components/DailySummaryCard';
 import MealList from '../components/MealList';
+import MealPlanCard from '../components/MealPlanCard';
 import GoalSettingModal from '../components/GoalSettingModal';
 import api from '../api';
 
@@ -29,11 +31,13 @@ function shiftDate(dateStr: string, days: number): string {
 }
 
 export default function DashboardPage() {
+  const location = useLocation();
   const today = toLocalDateStr(new Date());
   const [date, setDate] = useState(today);
-  const [showGoals, setShowGoals] = useState(false);
+  const [showGoals, setShowGoals] = useState((location.state as { showGoals?: boolean })?.showGoals ?? false);
   const { daily, weekly, loading, refresh } = useDashboard(date);
   const { user, logout } = useAuth();
+  const { mealPlan, isLoading: mealPlanLoading, error: mealPlanError, fetchMealPlan } = useMealPlan();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -82,6 +86,14 @@ export default function DashboardPage() {
       ) : daily ? (
         <>
           <DailySummaryCard summary={daily} onEditGoals={() => setShowGoals(true)} />
+
+          <MealPlanCard
+            date={date}
+            mealPlan={mealPlan}
+            isLoading={mealPlanLoading}
+            error={mealPlanError}
+            onFetch={fetchMealPlan}
+          />
 
           {/* Weekly mini chart */}
           {weekly && (

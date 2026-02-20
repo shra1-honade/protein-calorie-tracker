@@ -6,8 +6,9 @@ from models import (
     CommonFoodResponse,
     FoodLogRequest,
     FoodEntryResponse,
+    MealPlanResponse,
 )
-from gemini_client import detect_food_from_image
+from gemini_client import detect_food_from_image, generate_meal_plan
 
 router = APIRouter(prefix="/food", tags=["food"])
 
@@ -91,6 +92,27 @@ async def delete_entry(
 
     await db.execute("DELETE FROM food_entries WHERE id = $1", entry_id)
     return {"ok": True}
+
+
+@router.get("/meal-plan", response_model=MealPlanResponse)
+async def get_meal_plan(
+    date: str = Query(..., description="YYYY-MM-DD"),
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Generate a personalized AI meal plan based on today's logged entries."""
+    from datetime import date as date_type
+    target = date_type.fromisoformat(date)
+    rows = await db.fetch(
+        """SELECT food_name, protein_g, calories, carbs_g, meal_type
+           FROM food_entries
+           WHERE user_id = $1 AND DATE(logged_at) = $2
+           ORDER BY logged_at""",
+        user["id"], target,
+    )
+    entries = [dict(r) for r in rows]
+    result = await generate_meal_plan(user, entries)
+    return MealPlanResponse(**result)
 
 
 def _row_to_dict(row):

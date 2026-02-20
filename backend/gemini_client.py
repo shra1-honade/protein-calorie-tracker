@@ -78,3 +78,105 @@ async def detect_food_from_image(image_bytes: bytes) -> dict:
     for food in result.get('foods', []):
         food.setdefault('carbs_g', 0.0)
     return result
+
+
+async def generate_meal_plan(user: dict, today_entries: list) -> dict:
+    """
+    Generates a personalized meal plan using Gemini based on user profile and
+    what they've already eaten today.
+    """
+    configure_gemini()
+    model = genai.GenerativeModel('models/gemini-2.5-flash')
+
+    # Determine which meal slots have already been logged today
+    logged_meal_types = {e['meal_type'] for e in today_entries}
+    all_meal_types = ['breakfast', 'lunch', 'dinner', 'snack']
+    remaining_meals = [m for m in all_meal_types if m not in logged_meal_types]
+
+    # Compute totals consumed
+    total_protein = sum(e.get('protein_g', 0) for e in today_entries)
+    total_calories = sum(e.get('calories', 0) for e in today_entries)
+    total_carbs = sum(e.get('carbs_g', 0) for e in today_entries)
+
+    protein_goal = user.get('protein_goal', 150)
+    calorie_goal = user.get('calorie_goal', 2000)
+    carb_goal = user.get('carb_goal', 200)
+
+    remaining_protein = max(0, protein_goal - total_protein)
+    remaining_cal = max(0, calorie_goal - total_calories)
+    remaining_carbs = max(0, carb_goal - total_carbs)
+
+    dietary_preference = user.get('dietary_preference', 'non_vegetarian')
+    food_dislikes = user.get('food_dislikes') or 'None'
+
+    # Build list of logged entries for context
+    if today_entries:
+        entries_text = '\n'.join(
+            f"  - {e['food_name']} ({e.get('meal_type', 'snack')}): "
+            f"{e.get('protein_g', 0):.1f}g protein | {e.get('calories', 0):.0f} cal | {e.get('carbs_g', 0):.1f}g carbs"
+            for e in today_entries
+        )
+    else:
+        entries_text = '  (Nothing logged yet today)'
+
+    remaining_meals_str = ', '.join(remaining_meals) if remaining_meals else 'none (all meals logged)'
+
+    prompt = f"""You are an expert sports nutritionist and dietitian. Generate a precise, personalized meal plan.
+
+USER PROFILE:
+- Dietary type: {dietary_preference} (vegetarian/vegan/non_vegetarian)
+- Food dislikes/allergies: {food_dislikes}
+- Daily targets: {protein_goal}g protein | {calorie_goal} calories | {carb_goal}g carbs
+
+ALREADY CONSUMED TODAY:
+{entries_text}
+- Total consumed: {total_protein:.1f}g protein | {total_calories:.0f} cal | {total_carbs:.1f}g carbs
+- Remaining budget: {remaining_protein:.1f}g protein | {remaining_cal:.0f} cal | {remaining_carbs:.1f}g carbs
+
+INSTRUCTIONS:
+- Suggest meals ONLY for remaining/upcoming meal slots: {remaining_meals_str}
+- If no meals remain, provide a summary and tip for the day
+- Each meal must fit within the remaining macro budget
+- Use realistic, commonly available foods in India
+- Respect dietary preference strictly — no meat/fish for vegetarian, no animal products for vegan
+- Avoid ALL foods listed in dislikes
+- Provide exact gram quantities (e.g., "150g chicken breast")
+- Include macros for every food item
+
+Return ONLY a JSON object with this exact structure:
+{{
+  "meal_plan": [
+    {{
+      "meal_type": "breakfast|lunch|dinner|snack",
+      "already_eaten": false,
+      "items": [
+        {{"food": "...", "quantity": "...", "protein_g": 0, "calories": 0, "carbs_g": 0}}
+      ],
+      "meal_protein": 0,
+      "meal_calories": 0,
+      "meal_carbs": 0,
+      "meal_tip": "..."
+    }}
+  ],
+  "day_summary": {{"total_protein": 0, "total_calories": 0, "total_carbs": 0}},
+  "nutritionist_note": "..."
+}}"""
+
+    response = model.generate_content(prompt)
+    response_text = response.text.strip()
+
+    # Remove markdown code blocks if present
+    if response_text.startswith('```'):
+        lines = response_text.split('\n')
+        lines = lines[1:]
+        if lines and lines[-1].strip() == '```':
+            lines = lines[:-1]
+        response_text = '\n'.join(lines).strip()
+
+    # Find JSON object
+    start = response_text.find('{')
+    end = response_text.rfind('}') + 1
+    if start != -1 and end > start:
+        response_text = response_text[start:end]
+
+    return json.loads(response_text)

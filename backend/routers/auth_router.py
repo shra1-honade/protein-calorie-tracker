@@ -46,7 +46,10 @@ async def google_callback(code: str, db=Depends(get_db)):
 
     token = create_jwt(user_id)
     frontend_url = get_settings().frontend_url
-    return RedirectResponse(f"{frontend_url}/auth/callback?token={token}")
+    redirect_url = f"{frontend_url}/auth/callback?token={token}"
+    if not existing:
+        redirect_url += "&new_user=1"
+    return RedirectResponse(redirect_url)
 
 
 @router.get("/me", response_model=UserResponse)
@@ -94,7 +97,7 @@ async def update_profile(
 ):
     updates = {}
     for field in ("age", "weight_kg", "height_cm", "sex", "activity_level", "goal_type",
-                  "protein_goal", "calorie_goal", "carb_goal"):
+                  "protein_goal", "calorie_goal", "carb_goal", "dietary_preference", "food_dislikes"):
         val = getattr(profile, field)
         if val is not None:
             updates[field] = val

@@ -18,6 +18,8 @@ class UserResponse(BaseModel):
     sex: Optional[str] = None
     activity_level: Optional[str] = None
     goal_type: Optional[str] = None
+    dietary_preference: str = 'non_vegetarian'
+    food_dislikes: Optional[str] = None
 
 
 class GoalUpdate(BaseModel):
@@ -36,6 +38,8 @@ class UserProfileUpdate(BaseModel):
     protein_goal: Optional[float] = None
     calorie_goal: Optional[float] = None
     carb_goal: Optional[float] = None
+    dietary_preference: Optional[str] = None
+    food_dislikes: Optional[str] = None
 
 
 # --- Food ---
@@ -122,3 +126,28 @@ class LeaderboardEntry(BaseModel):
     avatar_url: Optional[str] = None
     total_protein: float
     rank: int
+
+
+# --- Meal Plan ---
+class MealItem(BaseModel):
+    food: str
+    quantity: str
+    protein_g: float
+    calories: float
+    carbs_g: float
+
+
+class MealPlanMeal(BaseModel):
+    meal_type: str
+    already_eaten: bool
+    items: list[MealItem]
+    meal_protein: float
+    meal_calories: float
+    meal_carbs: float
+    meal_tip: str
+
+
+class MealPlanResponse(BaseModel):
+    meal_plan: list[MealPlanMeal]
+    day_summary: dict
+    nutritionist_note: str

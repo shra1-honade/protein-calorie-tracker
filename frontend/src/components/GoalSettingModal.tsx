@@ -8,7 +8,7 @@ interface Props {
   onClose: () => void;
 }
 
-type Tab = 'manual' | 'auto';
+type Tab = 'manual' | 'auto' | 'preferences';
 type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 type GoalType = 'lose' | 'maintain' | 'gain';
 type Sex = 'male' | 'female';
@@ -100,6 +100,11 @@ export default function GoalSettingModal({ open, onClose }: Props) {
   const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
   const [applying, setApplying] = useState(false);
 
+  // Preferences tab state
+  const [dietaryPref, setDietaryPref] = useState(user?.dietary_preference ?? 'non_vegetarian');
+  const [foodDislikes, setFoodDislikes] = useState(user?.food_dislikes ?? '');
+  const [savingPrefs, setSavingPrefs] = useState(false);
+
   if (!open) return null;
 
   // --- Manual tab handlers ---
@@ -142,6 +147,20 @@ export default function GoalSettingModal({ open, onClose }: Props) {
     setCalcResult(result);
   };
 
+  const handleSavePreferences = async () => {
+    setSavingPrefs(true);
+    try {
+      await api.put('/auth/me/profile', {
+        dietary_preference: dietaryPref,
+        food_dislikes: foodDislikes || null,
+      });
+      await refreshUser();
+      onClose();
+    } finally {
+      setSavingPrefs(false);
+    }
+  };
+
   const handleApply = async () => {
     if (!calcResult) return;
     setApplying(true);
@@ -180,15 +199,15 @@ export default function GoalSettingModal({ open, onClose }: Props) {
 
         {/* Tab switcher */}
         <div className="flex mx-5 mt-4 rounded-lg bg-gray-100 p-1">
-          {(['manual', 'auto'] as Tab[]).map((t) => (
+          {(['manual', 'auto', 'preferences'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-1.5 text-sm font-medium rounded-md transition-colors ${
+              className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
               }`}
             >
-              {t === 'manual' ? 'Manual' : 'Auto-Calculate'}
+              {t === 'manual' ? 'Manual' : t === 'auto' ? 'Auto-Calc' : 'Preferences'}
             </button>
           ))}
         </div>
@@ -216,6 +235,53 @@ export default function GoalSettingModal({ open, onClose }: Props) {
               </div>
               <button onClick={handleSave} disabled={saving} className="btn-primary w-full">
                 {saving ? 'Saving...' : 'Save Goals'}
+              </button>
+            </>
+          )}
+
+          {/* ── PREFERENCES TAB ── */}
+          {tab === 'preferences' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preference</label>
+                <div className="flex gap-2">
+                  {[
+                    { value: 'vegetarian', label: 'Vegetarian', emoji: '🥦' },
+                    { value: 'vegan', label: 'Vegan', emoji: '🌱' },
+                    { value: 'non_vegetarian', label: 'Non-Veg', emoji: '🍗' },
+                  ].map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setDietaryPref(opt.value)}
+                      className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-lg border text-xs font-medium transition-colors ${
+                        dietaryPref === opt.value
+                          ? 'bg-primary-50 border-primary-500 text-primary-700'
+                          : 'border-gray-200 text-gray-600'
+                      }`}
+                    >
+                      <span className="text-xl">{opt.emoji}</span>
+                      <span>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Foods to Avoid
+                </label>
+                <textarea
+                  value={foodDislikes}
+                  onChange={(e) => setFoodDislikes(e.target.value)}
+                  rows={3}
+                  className="input resize-none"
+                  placeholder="e.g. no mushrooms, no peanuts, lactose intolerant"
+                />
+                <p className="text-xs text-gray-400 mt-1">Leave blank if none</p>
+              </div>
+
+              <button onClick={handleSavePreferences} disabled={savingPrefs} className="btn-primary w-full">
+                {savingPrefs ? 'Saving...' : 'Save Preferences'}
               </button>
             </>
           )}

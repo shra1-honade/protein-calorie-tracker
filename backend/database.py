@@ -1,7 +1,7 @@
 import asyncpg
 from config import get_settings
 
-CURRENT_SCHEMA_VERSION = 3
+CURRENT_SCHEMA_VERSION = 4
 
 pool: asyncpg.Pool = None
 
@@ -148,11 +148,23 @@ async def migrate_v2_to_v3(conn):
     print("Migrated schema v2 → v3: added user profile columns")
 
 
+async def migrate_v3_to_v4(conn):
+    """Add dietary preference and food dislikes to users."""
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS dietary_preference VARCHAR DEFAULT 'non_vegetarian'"
+    )
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS food_dislikes TEXT"
+    )
+    print("Migrated schema v3 → v4: added dietary_preference and food_dislikes columns")
+
+
 async def run_migrations(conn, from_version: int, to_version: int):
     """Run numbered migrations sequentially. Add new migrations here."""
     migrations = {
         2: migrate_v1_to_v2,
         3: migrate_v2_to_v3,
+        4: migrate_v3_to_v4,
     }
     for v in range(from_version + 1, to_version + 1):
         if v in migrations:
