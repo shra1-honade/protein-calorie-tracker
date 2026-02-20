@@ -1,4 +1,4 @@
-import { RefreshCw, Utensils } from 'lucide-react';
+import { RefreshCw, Utensils, Sparkles } from 'lucide-react';
 import { MealPlanMeal, MealPlanResponse } from '../types';
 
 const MEAL_EMOJI: Record<string, string> = {
@@ -72,8 +72,8 @@ export default function MealPlanCard({ date, mealPlan, isLoading, error, onFetch
     <div className="card">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Utensils size={16} className="text-primary-600" />
-          <h3 className="text-sm font-semibold">AI Meal Plan</h3>
+          <Sparkles size={16} className="text-primary-600" />
+          <h3 className="text-sm font-semibold">Smart Meal Plan</h3>
         </div>
         {mealPlan && (
           <button
@@ -88,9 +88,17 @@ export default function MealPlanCard({ date, mealPlan, isLoading, error, onFetch
       </div>
 
       {isLoading && (
-        <div className="flex flex-col items-center justify-center py-8 gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600" />
-          <p className="text-xs text-gray-500">Gemini is crafting your plan...</p>
+        <div className="flex flex-col items-center justify-center py-8 gap-4">
+          <div className="relative">
+            <div className="h-14 w-14 rounded-full border-4 border-primary-100 border-t-primary-500 animate-spin" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Sparkles size={18} className="text-primary-500" />
+            </div>
+          </div>
+          <div className="text-center space-y-1">
+            <p className="text-sm font-medium text-gray-700">Crafting your meal plan</p>
+            <p className="text-xs text-gray-400">Analysing your goals & history...</p>
+          </div>
         </div>
       )}
 
@@ -108,7 +116,7 @@ export default function MealPlanCard({ date, mealPlan, isLoading, error, onFetch
           onClick={() => onFetch(date)}
           className="btn-primary w-full flex items-center justify-center gap-2"
         >
-          <Utensils size={15} />
+          <Sparkles size={15} />
           Get Today's Meal Plan
         </button>
       )}

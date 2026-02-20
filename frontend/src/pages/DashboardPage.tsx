@@ -98,14 +98,6 @@ export default function DashboardPage() {
         <>
           <DailySummaryCard summary={daily} />
 
-          <MealPlanCard
-            date={date}
-            mealPlan={mealPlan}
-            isLoading={mealPlanLoading}
-            error={mealPlanError}
-            onFetch={fetchMealPlan}
-          />
-
           {/* Weekly mini chart */}
           {weekly && (
             <div className="card">
@@ -133,6 +125,14 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
+
+          <MealPlanCard
+            date={date}
+            mealPlan={mealPlan}
+            isLoading={mealPlanLoading}
+            error={mealPlanError}
+            onFetch={fetchMealPlan}
+          />
 
           <MealList entries={daily.entries} onDelete={handleDelete} />
         </>
