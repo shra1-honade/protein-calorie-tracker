@@ -3,6 +3,7 @@ from config import get_settings
 import PIL.Image
 import io
 import json
+from collections import defaultdict
 
 
 def configure_gemini():
@@ -80,7 +81,7 @@ async def detect_food_from_image(image_bytes: bytes) -> dict:
     return result
 
 
-async def generate_meal_plan(user: dict, today_entries: list) -> dict:
+async def generate_meal_plan(user: dict, today_entries: list, history_entries: list = []) -> dict:
     """
     Generates a personalized meal plan using Gemini based on user profile and
     what they've already eaten today.
@@ -109,6 +110,24 @@ async def generate_meal_plan(user: dict, today_entries: list) -> dict:
     dietary_preference = user.get('dietary_preference', 'non_vegetarian')
     food_dislikes = user.get('food_dislikes') or 'None'
 
+    # Build 7-day history summary
+    day_totals = defaultdict(lambda: {'protein': 0, 'calories': 0, 'carbs': 0})
+    food_freq = defaultdict(int)
+    for e in history_entries:
+        day = str(e['log_date'])
+        day_totals[day]['protein'] += e.get('protein_g', 0)
+        day_totals[day]['calories'] += e.get('calories', 0)
+        day_totals[day]['carbs'] += e.get('carbs_g', 0)
+        food_freq[e['food_name']] += 1
+
+    history_lines = [
+        f"  {day}: {v['protein']:.0f}g P | {v['calories']:.0f} cal | {v['carbs']:.0f}g C"
+        for day, v in sorted(day_totals.items())
+    ]
+    top_foods = sorted(food_freq.items(), key=lambda x: -x[1])[:5]
+    top_foods_str = ', '.join(f"{name} (x{cnt})" for name, cnt in top_foods) or 'None'
+    history_section = '\n'.join(history_lines) if history_lines else '  No history yet'
+
     # Build list of logged entries for context
     if today_entries:
         entries_text = '\n'.join(
@@ -127,6 +146,14 @@ USER PROFILE:
 - Dietary type: {dietary_preference} (vegetarian/vegan/non_vegetarian)
 - Food dislikes/allergies: {food_dislikes}
 - Daily targets: {protein_goal}g protein | {calorie_goal} calories | {carb_goal}g carbs
+
+RECENT EATING HISTORY (last 7 days):
+{history_section}
+Most frequent foods: {top_foods_str}
+Use this to:
+- Detect and fix macro shortfalls (e.g., consistently low protein days)
+- Avoid repeating the same meals too frequently
+- Account for typical eating patterns when suggesting portions
 
 ALREADY CONSUMED TODAY:
 {entries_text}

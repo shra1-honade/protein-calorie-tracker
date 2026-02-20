@@ -21,5 +21,10 @@ export function useMealPlan() {
     }
   };
 
-  return { mealPlan, isLoading, error, fetchMealPlan };
+  const clearMealPlan = () => {
+    setMealPlan(null);
+    setError(null);
+  };
+
+  return { mealPlan, isLoading, error, fetchMealPlan, clearMealPlan };
 }

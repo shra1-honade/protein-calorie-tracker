@@ -111,7 +111,21 @@ async def get_meal_plan(
         user["id"], target,
     )
     entries = [dict(r) for r in rows]
-    result = await generate_meal_plan(user, entries)
+
+    from datetime import timedelta
+    history_rows = await db.fetch(
+        """SELECT food_name, protein_g, calories, carbs_g, meal_type,
+                  DATE(logged_at) AS log_date
+           FROM food_entries
+           WHERE user_id = $1
+             AND DATE(logged_at) < $2
+             AND DATE(logged_at) >= $2 - INTERVAL '7 days'
+           ORDER BY logged_at""",
+        user["id"], target,
+    )
+    history_entries = [dict(r) for r in history_rows]
+
+    result = await generate_meal_plan(user, entries, history_entries)
     return MealPlanResponse(**result)
 
 

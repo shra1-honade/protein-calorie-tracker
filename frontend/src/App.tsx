@@ -20,9 +20,10 @@ function AuthCallback() {
 
   useEffect(() => {
     const token = params.get('token');
+    const isNewUser = params.get('new_user') === '1';
     if (token) {
       login(token);
-      navigate('/', { replace: true });
+      navigate('/', { replace: true, state: { showGoals: isNewUser } });
     }
   }, [params, login, navigate]);
 

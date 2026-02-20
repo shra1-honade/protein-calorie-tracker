@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -37,7 +37,11 @@ export default function DashboardPage() {
   const [showGoals, setShowGoals] = useState((location.state as { showGoals?: boolean })?.showGoals ?? false);
   const { daily, weekly, loading, refresh } = useDashboard(date);
   const { user, logout } = useAuth();
-  const { mealPlan, isLoading: mealPlanLoading, error: mealPlanError, fetchMealPlan } = useMealPlan();
+  const { mealPlan, isLoading: mealPlanLoading, error: mealPlanError, fetchMealPlan, clearMealPlan } = useMealPlan();
+
+  useEffect(() => {
+    clearMealPlan();
+  }, [date]);
   const navigate = useNavigate();
 
   const handleLogout = () => {
