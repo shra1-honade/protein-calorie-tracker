@@ -1,5 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, Users } from 'lucide-react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { LayoutDashboard, UtensilsCrossed, Users, Target } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -8,6 +8,8 @@ const navItems = [
 ];
 
 export default function Layout() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen pb-20">
       <Outlet />
@@ -27,6 +29,13 @@ export default function Layout() {
               {label}
             </NavLink>
           ))}
+          <button
+            onClick={() => navigate('/', { state: { showGoals: true } })}
+            className="flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium text-gray-500 hover:text-primary-600 transition-colors"
+          >
+            <Target size={22} />
+            Goals
+          </button>
         </div>
       </nav>
     </div>

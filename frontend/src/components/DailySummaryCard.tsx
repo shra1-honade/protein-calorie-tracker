@@ -2,10 +2,9 @@ import { DailySummary } from '../types';
 
 interface Props {
   summary: DailySummary;
-  onEditGoals: () => void;
 }
 
-export default function DailySummaryCard({ summary, onEditGoals }: Props) {
+export default function DailySummaryCard({ summary }: Props) {
   const proteinPct = Math.min(
     100,
     Math.round((summary.total_protein / summary.protein_goal) * 100)
@@ -24,15 +23,7 @@ export default function DailySummaryCard({ summary, onEditGoals }: Props) {
 
   return (
     <div className="card space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="font-semibold text-lg">Daily Progress</h2>
-        <button
-          onClick={onEditGoals}
-          className="text-xs text-primary-600 font-medium"
-        >
-          Edit Goals
-        </button>
-      </div>
+      <h2 className="font-semibold text-lg">Daily Progress</h2>
 
       {/* Protein Ring */}
       <div className="flex items-center gap-6">

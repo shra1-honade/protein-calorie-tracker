@@ -34,7 +34,14 @@ export default function DashboardPage() {
   const location = useLocation();
   const today = toLocalDateStr(new Date());
   const [date, setDate] = useState(today);
-  const [showGoals, setShowGoals] = useState((location.state as { showGoals?: boolean })?.showGoals ?? false);
+  const [showGoals, setShowGoals] = useState(false);
+
+  useEffect(() => {
+    if ((location.state as { showGoals?: boolean })?.showGoals) {
+      setShowGoals(true);
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state]);
   const { daily, weekly, loading, refresh } = useDashboard(date);
   const { user, logout } = useAuth();
   const { mealPlan, isLoading: mealPlanLoading, error: mealPlanError, fetchMealPlan, clearMealPlan } = useMealPlan();
@@ -89,7 +96,7 @@ export default function DashboardPage() {
         </div>
       ) : daily ? (
         <>
-          <DailySummaryCard summary={daily} onEditGoals={() => setShowGoals(true)} />
+          <DailySummaryCard summary={daily} />
 
           <MealPlanCard
             date={date}
