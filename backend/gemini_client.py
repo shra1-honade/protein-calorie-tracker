@@ -167,14 +167,20 @@ INSTRUCTIONS:
 - Respect dietary preference strictly — no meat/fish for vegetarian, no animal products for vegan
 - Avoid ALL foods listed in dislikes
 
+CUISINE & FOOD STYLE:
+- Infer the user's food culture and cuisine preferences from their meal history above
+- Stay broadly consistent with what they already eat — if their history shows mostly home-cooked Indian meals, suggest similar; if it shows Western or mixed, reflect that
+- Do NOT invent a cuisine if the history is empty or ambiguous — default to globally common, widely available meals
+- Introduce variety: don't repeat dishes already in the history; rotate proteins, cooking methods, and cuisines within what feels natural for this user
+
 RECIPE-LEVEL SUGGESTIONS (critical):
 - Suggest COMPLETE PREPARED DISHES, not raw ingredients
-  ✅ Good: "Masala Omelette", "Dal Tadka with Jeera Rice", "Paneer Bhurji", "Chicken Tikka", "Moong Dal Cheela", "Rajma Chawal", "Upma", "Curd Rice"
-  ❌ Bad: "3 eggs", "100g paneer", "150g chicken breast", "80g oats"
-- Each item in a meal is one dish or prepared food component (e.g., a curry, a bread, a side)
-- Express quantity as real serving sizes: "1 bowl", "2 rotis", "1 plate", "1 cup", "1 serving (~200g cooked)"
-- Calculate macros for the dish AS COOKED AND SERVED at that quantity — account for oils, spices, and cooking method in your calorie estimate
-- meal_tip: give a short, practical cooking or prep note (e.g., "Use 1 tsp ghee for tempering", "Grill instead of fry to save ~80 cal", "Add extra paneer to boost protein")
+  ✅ Good: "Scrambled Eggs on Toast", "Grilled Chicken Salad", "Lentil Soup", "Stir-fried Tofu with Rice"
+  ❌ Bad: "3 eggs", "150g chicken breast", "80g oats", "100g tofu"
+- Each item in a meal is one dish or prepared food component
+- Express quantity as real serving sizes: "1 bowl", "1 plate", "1 cup", "1 serving (~200g cooked)"
+- Calculate macros for the dish AS COOKED AND SERVED — account for oils, sauces, and cooking method in your calorie estimate
+- meal_tip: give a short, practical cooking or prep note (e.g., "Grill instead of fry to save ~80 cal", "Add an extra egg to boost protein by 6g")
 
 Return ONLY a JSON object with this exact structure:
 {{
