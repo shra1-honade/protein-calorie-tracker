@@ -87,7 +87,7 @@ async def generate_meal_plan(user: dict, today_entries: list, history_entries: l
     what they've already eaten today.
     """
     configure_gemini()
-    model = genai.GenerativeModel('models/gemini-2.5-flash')
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
 
     # Determine which meal slots have already been logged today
     logged_meal_types = {e['meal_type'] for e in today_entries}

@@ -125,7 +125,13 @@ async def get_meal_plan(
     )
     history_entries = [dict(r) for r in history_rows]
 
-    result = await generate_meal_plan(user, entries, history_entries)
+    try:
+        result = await generate_meal_plan(user, entries, history_entries)
+    except Exception as e:
+        msg = str(e)
+        if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
+            raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
+        raise HTTPException(status_code=500, detail="Failed to generate meal plan. Please try again.")
     return MealPlanResponse(**result)
 
 
