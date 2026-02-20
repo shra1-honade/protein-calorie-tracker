@@ -10,7 +10,7 @@ interface Props {
 
 type Tab = 'manual' | 'auto' | 'preferences';
 type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
-type GoalType = 'lose' | 'maintain' | 'gain';
+type GoalType = 'lose' | 'maintain' | 'gain' | 'recomp';
 type Sex = 'male' | 'female';
 
 interface CalcResult {
@@ -46,8 +46,11 @@ function calculateMacros(
   const calorie_goal = Math.round(
     goal === 'lose' ? tdee - 500 : goal === 'gain' ? tdee + 250 : tdee,
   );
-  const protein_goal = Math.round(weight_kg * (goal === 'maintain' ? 1.6 : 2.0));
-  const fat_g = Math.round(weight_kg * 0.8);
+  // Recomp needs highest protein (2.6g/kg per research); gain/lose use 2.0g/kg; maintain uses 1.6g/kg
+  const protein_per_kg = goal === 'recomp' ? 2.6 : goal === 'maintain' ? 1.6 : 2.0;
+  const protein_goal = Math.round(weight_kg * protein_per_kg);
+  // Recomp lowers fat floor slightly (0.7g/kg) to fit higher protein within maintenance calories
+  const fat_g = Math.round(weight_kg * (goal === 'recomp' ? 0.7 : 0.8));
   const carb_goal = Math.max(
     50,
     Math.round((calorie_goal - protein_goal * 4 - fat_g * 9) / 4),
@@ -68,6 +71,7 @@ const GOAL_OPTIONS: { value: GoalType; label: string; emoji: string }[] = [
   { value: 'lose',     label: 'Lose Weight',   emoji: '📉' },
   { value: 'maintain', label: 'Maintain',      emoji: '⚖️' },
   { value: 'gain',     label: 'Gain Muscle',   emoji: '💪' },
+  { value: 'recomp',   label: 'Recomp',        emoji: '🔄' },
 ];
 
 export default function GoalSettingModal({ open, onClose }: Props) {
