@@ -1,4 +1,5 @@
-import { RefreshCw, Utensils, Sparkles } from 'lucide-react';
+import { RefreshCw, Sparkles, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import { MealPlanMeal, MealPlanResponse } from '../types';
 
 const MEAL_EMOJI: Record<string, string> = {
@@ -43,7 +44,7 @@ function MealRow({ meal }: MealRowProps) {
             </div>
           ))}
           {meal.meal_tip && (
-            <p className="text-xs text-primary-600 italic mt-1">💡 {meal.meal_tip}</p>
+            <p className="text-xs text-primary-600 italic mt-1 line-clamp-1">💡 {meal.meal_tip}</p>
           )}
         </div>
       )}
@@ -57,6 +58,26 @@ interface Props {
   isLoading: boolean;
   error: string | null;
   onFetch: (date: string) => void;
+}
+
+function NutritionistNote({ note }: { note: string }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="bg-primary-50 rounded-lg px-3 py-2 mt-2">
+      <p className={`text-xs text-primary-700 ${expanded ? '' : 'line-clamp-1'}`}>
+        💬 {note}
+      </p>
+      {note.length > 80 && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="flex items-center gap-0.5 text-[11px] text-primary-500 mt-0.5"
+        >
+          {expanded ? 'less' : 'more'}
+          <ChevronDown size={11} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} />
+        </button>
+      )}
+    </div>
+  );
 }
 
 export default function MealPlanCard({ date, mealPlan, isLoading, error, onFetch }: Props) {
@@ -133,9 +154,7 @@ export default function MealPlanCard({ date, mealPlan, isLoading, error, onFetch
           ))}
 
           {mealPlan.nutritionist_note && (
-            <div className="bg-primary-50 rounded-lg p-3 mt-2">
-              <p className="text-xs text-primary-700">💬 {mealPlan.nutritionist_note}</p>
-            </div>
+            <NutritionistNote note={mealPlan.nutritionist_note} />
           )}
 
           {remaining && (

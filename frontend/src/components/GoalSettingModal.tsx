@@ -272,16 +272,16 @@ export default function GoalSettingModal({ open, onClose }: Props) {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Foods to Avoid
+                  Remarks
                 </label>
                 <textarea
                   value={foodDislikes}
                   onChange={(e) => setFoodDislikes(e.target.value)}
                   rows={3}
                   className="input resize-none"
-                  placeholder="e.g. no mushrooms, no peanuts, lactose intolerant"
+                  placeholder="e.g. avoid mushrooms, prefer Indian food, lactose intolerant, low sodium, high fibre"
                 />
-                <p className="text-xs text-gray-400 mt-1">Leave blank if none</p>
+                <p className="text-xs text-gray-400 mt-1">Any dietary notes or preferences for the AI</p>
               </div>
 
               <button onClick={handleSavePreferences} disabled={savingPrefs} className="btn-primary w-full">
