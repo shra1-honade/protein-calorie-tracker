@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../hooks/useAuth';
@@ -103,6 +103,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
   );
   const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
   const [applying, setApplying] = useState(false);
+  const calcResultRef = useRef<HTMLDivElement>(null);
 
   // Preferences tab state
   const [dietaryPref, setDietaryPref] = useState(user?.dietary_preference ?? 'non_vegetarian');
@@ -149,6 +150,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
     if (!ageNum || !weight_kg || !height_cm) return;
     const result = calculateMacros(ageNum, weight_kg, height_cm, sex, activityLevel, goalType);
     setCalcResult(result);
+    setTimeout(() => calcResultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
   };
 
   const handleSavePreferences = async () => {
@@ -402,7 +404,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
 
               {/* Results panel */}
               {calcResult && (
-                <div className="bg-gray-50 rounded-xl p-4 space-y-3">
+                <div ref={calcResultRef} className="bg-gray-50 rounded-xl p-4 space-y-3">
                   <p className="text-xs text-gray-500 text-center">
                     BMR: <span className="font-semibold text-gray-700">{calcResult.bmr} cal</span>
                     {' · '}
