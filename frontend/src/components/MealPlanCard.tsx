@@ -14,6 +14,7 @@ interface MealRowProps {
 }
 
 function MealRow({ meal }: MealRowProps) {
+  const [tipExpanded, setTipExpanded] = useState(false);
   const emoji = MEAL_EMOJI[meal.meal_type] ?? '🍽️';
   const label = meal.meal_type.charAt(0).toUpperCase() + meal.meal_type.slice(1);
 
@@ -44,7 +45,20 @@ function MealRow({ meal }: MealRowProps) {
             </div>
           ))}
           {meal.meal_tip && (
-            <p className="text-xs text-primary-600 italic mt-1 line-clamp-1">💡 {meal.meal_tip}</p>
+            <div className="mt-1">
+              <p className={`text-xs text-primary-600 italic ${tipExpanded ? '' : 'line-clamp-1'}`}>
+                💡 {meal.meal_tip}
+              </p>
+              {meal.meal_tip.length > 60 && (
+                <button
+                  onClick={() => setTipExpanded(!tipExpanded)}
+                  className="flex items-center gap-0.5 text-[11px] text-primary-500 mt-0.5"
+                >
+                  {tipExpanded ? 'less' : 'more'}
+                  <ChevronDown size={11} className={`transition-transform ${tipExpanded ? 'rotate-180' : ''}`} />
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
