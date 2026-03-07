@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:5173"
     database_url: str = "postgresql://localhost:5432/tracker"
     jwt_expiry_days: int = 7
+    vapid_private_key: str = ""
+    vapid_public_key: str = ""
+    vapid_contact_email: str = "admin@example.com"
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

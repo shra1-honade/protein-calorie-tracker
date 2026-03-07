@@ -20,6 +20,10 @@ class UserResponse(BaseModel):
     goal_type: Optional[str] = None
     dietary_preference: str = 'non_vegetarian'
     food_dislikes: Optional[str] = None
+    notif_enabled: bool = False
+    notif_breakfast_time: str = '08:00'
+    notif_lunch_time: str = '12:30'
+    notif_dinner_time: str = '19:00'
 
 
 class GoalUpdate(BaseModel):
@@ -189,3 +193,26 @@ class RefineWeeklyPlanResponse(BaseModel):
     plan: list[WeeklyDayPlan]
     saved: bool = False
     assistant_message: str
+
+
+# --- Notifications ---
+class PushSubscriptionRequest(BaseModel):
+    endpoint: str
+    p256dh: str
+    auth: str
+    timezone: str = 'UTC'
+
+
+class NotificationPrefsUpdate(BaseModel):
+    notif_enabled: Optional[bool] = None
+    notif_breakfast_time: Optional[str] = None
+    notif_lunch_time: Optional[str] = None
+    notif_dinner_time: Optional[str] = None
+
+
+class NotificationPrefsResponse(BaseModel):
+    notif_enabled: bool
+    notif_breakfast_time: str
+    notif_lunch_time: str
+    notif_dinner_time: str
+    vapid_public_key: str

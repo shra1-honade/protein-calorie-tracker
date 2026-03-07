@@ -1,14 +1,16 @@
-import { useState, useRef } from 'react';
-import { X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { X, Bell } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../hooks/useAuth';
+import { useNotifications } from '../hooks/useNotifications';
+
+type Tab = 'manual' | 'auto' | 'preferences' | 'notifications';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  initialTab?: Tab;
 }
-
-type Tab = 'manual' | 'auto' | 'preferences';
 type ActivityLevel = 'sedentary' | 'light' | 'moderate' | 'active' | 'very_active';
 type GoalType = 'lose' | 'maintain' | 'gain' | 'recomp';
 type Sex = 'male' | 'female';
@@ -74,8 +76,10 @@ const GOAL_OPTIONS: { value: GoalType; label: string; emoji: string }[] = [
   { value: 'recomp',   label: 'Recomp',        emoji: '🔄' },
 ];
 
-export default function GoalSettingModal({ open, onClose }: Props) {
+export default function GoalSettingModal({ open, onClose, initialTab = 'manual' }: Props) {
   const { user, refreshUser } = useAuth();
+  const { prefs, permission, loading: notifLoading, error: notifError,
+          isSupported, requestPermissionAndSubscribe, unsubscribe, updatePrefs } = useNotifications();
 
   // Manual tab state
   const [protein, setProtein] = useState(String(user?.protein_goal ?? 150));
@@ -83,8 +87,10 @@ export default function GoalSettingModal({ open, onClose }: Props) {
   const [carbs, setCarbs] = useState(String(user?.carb_goal ?? 200));
   const [saving, setSaving] = useState(false);
 
-  // Tab
-  const [tab, setTab] = useState<Tab>('manual');
+  // Tab — sync when modal opens (initialTab may change between openings)
+  const [tab, setTab] = useState<Tab>(initialTab);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) setTab(initialTab); }, [open]);
 
   // Auto-calculate tab state (pre-fill from saved profile)
   const [age, setAge] = useState(String(user?.age ?? ''));
@@ -204,8 +210,8 @@ export default function GoalSettingModal({ open, onClose }: Props) {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex mx-5 mt-4 rounded-lg bg-gray-100 p-1">
-          {(['manual', 'auto', 'preferences'] as Tab[]).map((t) => (
+        <div className="flex mx-5 mt-4 rounded-lg bg-gray-100 p-1 gap-0.5">
+          {(['manual', 'auto', 'preferences', 'notifications'] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -213,7 +219,7 @@ export default function GoalSettingModal({ open, onClose }: Props) {
                 tab === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
               }`}
             >
-              {t === 'manual' ? 'Manual' : t === 'auto' ? 'Auto-Calc' : 'Preferences'}
+              {t === 'manual' ? 'Manual' : t === 'auto' ? 'Auto-Calc' : t === 'preferences' ? 'Prefs' : 'Alerts'}
             </button>
           ))}
         </div>
@@ -289,6 +295,77 @@ export default function GoalSettingModal({ open, onClose }: Props) {
               <button onClick={handleSavePreferences} disabled={savingPrefs} className="btn-primary w-full">
                 {savingPrefs ? 'Saving...' : 'Save Preferences'}
               </button>
+            </>
+          )}
+
+          {/* ── NOTIFICATIONS TAB ── */}
+          {tab === 'notifications' && (
+            <>
+              {!isSupported ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+                  Push notifications are not supported in this browser. Try installing the app to your home screen on iOS 16.4+ or use Chrome on Android.
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-800">Meal reminders</p>
+                      <p className="text-xs text-gray-500">Only fires if you haven't logged that meal yet</p>
+                    </div>
+                    <button
+                      onClick={prefs?.notif_enabled ? unsubscribe : requestPermissionAndSubscribe}
+                      disabled={notifLoading}
+                      className={`relative w-12 h-6 rounded-full transition-colors ${
+                        prefs?.notif_enabled ? 'bg-primary-600' : 'bg-gray-300'
+                      } ${notifLoading ? 'opacity-50' : ''}`}
+                    >
+                      <span
+                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                          prefs?.notif_enabled ? 'translate-x-6' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {permission === 'denied' && (
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">
+                      Notifications are blocked. Go to your browser settings → Site settings → Notifications and allow this site.
+                    </div>
+                  )}
+
+                  {notifError && (
+                    <p className="text-xs text-red-600">{notifError}</p>
+                  )}
+
+                  {prefs?.notif_enabled && prefs && (
+                    <div className="space-y-3 pt-1">
+                      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reminder times</p>
+                      {(
+                        [
+                          { label: 'Breakfast', key: 'notif_breakfast_time' as const },
+                          { label: 'Lunch', key: 'notif_lunch_time' as const },
+                          { label: 'Dinner', key: 'notif_dinner_time' as const },
+                        ]
+                      ).map(({ label, key }) => (
+                        <div key={key} className="flex items-center justify-between">
+                          <label className="text-sm text-gray-700">{label}</label>
+                          <input
+                            type="time"
+                            defaultValue={prefs[key]}
+                            onBlur={(e) => updatePrefs({ [key]: e.target.value })}
+                            className="border border-gray-300 rounded-lg px-2 py-1 text-sm"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-2 bg-gray-50 rounded-xl p-3">
+                    <Bell size={14} className="text-gray-400 mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-gray-500">Reminders only fire if you haven't logged that meal yet for the day.</p>
+                  </div>
+                </>
+              )}
             </>
           )}
 

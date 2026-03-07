@@ -14,6 +14,10 @@ export interface User {
   goal_type?: string;
   dietary_preference?: string;
   food_dislikes?: string | null;
+  notif_enabled?: boolean;
+  notif_breakfast_time?: string;
+  notif_lunch_time?: string;
+  notif_dinner_time?: string;
 }
 
 export interface CommonFood {

@@ -5,7 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from config import get_settings
 from database import create_pool, close_pool, init_db
 from seed import seed_common_foods
+from scheduler import start_scheduler, stop_scheduler
 from routers import auth_router, food_router, dashboard_router, group_router, admin_router
+from routers import notification_router
 
 
 @asynccontextmanager
@@ -13,7 +15,9 @@ async def lifespan(app: FastAPI):
     await create_pool()
     await init_db()
     await seed_common_foods()
+    start_scheduler()
     yield
+    stop_scheduler()
     await close_pool()
 
 
@@ -33,6 +37,7 @@ app.include_router(food_router.router)
 app.include_router(dashboard_router.router)
 app.include_router(group_router.router)
 app.include_router(admin_router.router)
+app.include_router(notification_router.router)
 
 
 @app.get("/health")

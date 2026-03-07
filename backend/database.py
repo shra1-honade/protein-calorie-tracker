@@ -1,7 +1,7 @@
 import asyncpg
 from config import get_settings
 
-CURRENT_SCHEMA_VERSION = 5
+CURRENT_SCHEMA_VERSION = 6
 
 pool: asyncpg.Pool = None
 
@@ -117,6 +117,18 @@ async def init_db():
                 UNIQUE(user_id, week_start)
             )
         """)
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS push_subscriptions (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                endpoint TEXT NOT NULL,
+                p256dh TEXT NOT NULL,
+                auth TEXT NOT NULL,
+                timezone VARCHAR DEFAULT 'UTC',
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(user_id, endpoint)
+            )
+        """)
 
         # Check and set schema version
         row = await conn.fetchrow("SELECT version FROM schema_version")
@@ -187,6 +199,35 @@ async def migrate_v4_to_v5(conn):
     print("Migrated schema v4 → v5: added weekly_meal_plans table")
 
 
+async def migrate_v5_to_v6(conn):
+    """Add push_subscriptions table and notification prefs columns to users."""
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            endpoint TEXT NOT NULL,
+            p256dh TEXT NOT NULL,
+            auth TEXT NOT NULL,
+            timezone VARCHAR DEFAULT 'UTC',
+            created_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(user_id, endpoint)
+        )
+    """)
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_enabled BOOLEAN DEFAULT FALSE"
+    )
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_breakfast_time VARCHAR DEFAULT '08:00'"
+    )
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_lunch_time VARCHAR DEFAULT '12:30'"
+    )
+    await conn.execute(
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS notif_dinner_time VARCHAR DEFAULT '19:00'"
+    )
+    print("Migrated schema v5 → v6: added push_subscriptions table and notification columns")
+
+
 async def run_migrations(conn, from_version: int, to_version: int):
     """Run numbered migrations sequentially. Add new migrations here."""
     migrations = {
@@ -194,6 +235,7 @@ async def run_migrations(conn, from_version: int, to_version: int):
         3: migrate_v2_to_v3,
         4: migrate_v3_to_v4,
         5: migrate_v4_to_v5,
+        6: migrate_v5_to_v6,
     }
     for v in range(from_version + 1, to_version + 1):
         if v in migrations:

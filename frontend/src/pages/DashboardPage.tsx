@@ -34,6 +34,11 @@ export default function DashboardPage() {
   const today = toLocalDateStr(new Date());
   const [date, setDate] = useState(today);
   const [showGoals, setShowGoals] = useState(false);
+  const [goalsTab, setGoalsTab] = useState<'manual' | 'auto' | 'preferences' | 'notifications'>('manual');
+  const [showNotifBanner, setShowNotifBanner] = useState(() => {
+    const supported = typeof window !== 'undefined' && 'Notification' in window && 'serviceWorker' in navigator && 'PushManager' in window;
+    return supported && Notification.permission === 'default' && !localStorage.getItem('notif_prompt_dismissed');
+  });
 
   useEffect(() => {
     if ((location.state as { showGoals?: boolean })?.showGoals) {
@@ -55,8 +60,31 @@ export default function DashboardPage() {
     refresh();
   };
 
+  const dismissNotifBanner = () => {
+    localStorage.setItem('notif_prompt_dismissed', '1');
+    setShowNotifBanner(false);
+  };
+
+  const openNotifSettings = () => {
+    setGoalsTab('notifications');
+    setShowGoals(true);
+    dismissNotifBanner();
+  };
+
   return (
     <div className="max-w-lg mx-auto px-4 py-4 space-y-4">
+      {/* Notification prompt banner */}
+      {showNotifBanner && (
+        <div className="flex items-center justify-between bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 gap-3">
+          <p className="text-sm text-primary-800 flex-1">Enable meal reminders?</p>
+          <button onClick={openNotifSettings} className="text-xs font-semibold text-primary-700 whitespace-nowrap">
+            Set up
+          </button>
+          <button onClick={dismissNotifBanner} className="text-primary-400 hover:text-primary-600">
+            ✕
+          </button>
+        </div>
+      )}
       {/* Header with user greeting & logout */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">Hi, <span className="font-medium text-gray-800">{user?.display_name?.split(' ')[0]}</span></p>
@@ -126,7 +154,7 @@ export default function DashboardPage() {
         </>
       ) : null}
 
-      <GoalSettingModal open={showGoals} onClose={() => { setShowGoals(false); refresh(); }} />
+      <GoalSettingModal open={showGoals} initialTab={goalsTab} onClose={() => { setShowGoals(false); setGoalsTab('manual'); refresh(); }} />
     </div>
   );
 }
