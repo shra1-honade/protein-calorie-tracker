@@ -61,9 +61,9 @@ function MealRow({ meal }: { meal: MealPlanMeal }) {
         </span>
       </div>
       {meal.items.map((item, i) => (
-        <div key={i} className="flex justify-between text-sm">
-          <span className="text-gray-700">{item.food}</span>
-          <span className="text-gray-400 ml-2 shrink-0">{item.quantity}</span>
+        <div key={i} className="flex justify-between text-sm gap-2 min-w-0">
+          <span className="text-gray-700 break-words min-w-0">{item.food}</span>
+          <span className="text-gray-400 shrink-0">{item.quantity}</span>
         </div>
       ))}
       {meal.meal_tip && (
