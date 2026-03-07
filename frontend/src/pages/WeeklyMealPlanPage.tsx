@@ -8,8 +8,11 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Settings2,
 } from 'lucide-react';
 import { useWeeklyMealPlan } from '../hooks/useWeeklyMealPlan';
+import { useAuth } from '../hooks/useAuth';
+import GoalSettingModal from '../components/GoalSettingModal';
 import { MealPlanMeal, WeeklyDayPlan, ConversationMessage } from '../types';
 
 // ---- helpers ----
@@ -209,11 +212,49 @@ function ChatPanel({
   );
 }
 
+// ---- preferences bar ----
+
+const DIET_LABEL: Record<string, string> = {
+  non_vegetarian: '🍗 Non-veg',
+  vegetarian: '🥗 Vegetarian',
+  vegan: '🌱 Vegan',
+};
+
+function PreferencesBar({ onEdit }: { onEdit: () => void }) {
+  const { user } = useAuth();
+  if (!user) return null;
+
+  const diet = DIET_LABEL[user.dietary_preference ?? 'non_vegetarian'] ?? '🍽️ Non-veg';
+  const dislikes = user.food_dislikes?.trim() || 'None';
+  const goals = `${user.protein_goal}g P · ${user.calorie_goal} cal`;
+
+  return (
+    <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-xs text-gray-600 gap-2">
+      <div className="flex items-center gap-3 flex-wrap min-w-0">
+        <span className="font-medium">{diet}</span>
+        <span className="text-gray-400">|</span>
+        <span className="truncate">Dislikes: {dislikes}</span>
+        <span className="text-gray-400">|</span>
+        <span className="shrink-0">{goals}</span>
+      </div>
+      <button
+        onClick={onEdit}
+        className="flex items-center gap-1 text-primary-600 hover:text-primary-700 font-medium shrink-0"
+      >
+        <Settings2 size={13} />
+        Edit
+      </button>
+    </div>
+  );
+}
+
 // ---- main page ----
 
 export default function WeeklyMealPlanPage() {
   const [currentMonday, setCurrentMonday] = useState(() => getMondayOfWeek(new Date()));
   const [activeDay, setActiveDay] = useState(0);
+  const [showPrefs, setShowPrefs] = useState(false);
+  const { refreshUser } = useAuth();
   const {
     plan,
     conversationHistory,
@@ -252,11 +293,19 @@ export default function WeeklyMealPlanPage() {
 
   return (
     <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
+      <GoalSettingModal
+        open={showPrefs}
+        onClose={() => { setShowPrefs(false); refreshUser(); }}
+      />
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Weekly Meal Plan</h1>
         <p className="text-sm text-gray-500 mt-0.5">Plan and refine your week's meals</p>
       </div>
+
+      {/* Preferences bar */}
+      <PreferencesBar onEdit={() => setShowPrefs(true)} />
 
       {/* Week selector */}
       <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-3">
