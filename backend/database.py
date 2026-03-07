@@ -19,7 +19,7 @@ async def create_pool():
         base, _, query = dsn.partition('?')
         params = '&'.join(p for p in query.split('&') if not p.startswith('sslmode='))
         dsn = base + ('?' + params if params else '')
-    pool = await asyncpg.create_pool(dsn=dsn, ssl=ssl_mode, min_size=1, max_size=10)
+    pool = await asyncpg.create_pool(dsn=dsn, ssl=ssl_mode, min_size=1, max_size=10, statement_cache_size=0)
 
 
 async def close_pool():
