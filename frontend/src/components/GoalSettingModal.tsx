@@ -334,7 +334,9 @@ export default function GoalSettingModal({ open, onClose, initialTab = 'manual' 
                   )}
 
                   {notifError && (
-                    <p className="text-xs text-red-600">{notifError}</p>
+                    <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-xs text-red-700">
+                      {notifError}
+                    </div>
                   )}
 
                   {prefs?.notif_enabled && prefs && (

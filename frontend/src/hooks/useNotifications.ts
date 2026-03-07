@@ -83,6 +83,7 @@ export function useNotifications() {
       await api.put('/notifications/prefs', { notif_enabled: true });
       await loadPrefs();
     } catch (e) {
+      console.error('[useNotifications] subscribe error:', e);
       setError(e instanceof Error ? e.message : 'Failed to subscribe');
     } finally {
       setLoading(false);
