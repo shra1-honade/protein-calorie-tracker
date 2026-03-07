@@ -3,10 +3,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDashboard } from '../hooks/useDashboard';
-import { useMealPlan } from '../hooks/useMealPlan';
 import DailySummaryCard from '../components/DailySummaryCard';
 import MealList from '../components/MealList';
-import MealPlanCard from '../components/MealPlanCard';
+import WeeklyPlanDayPreview from '../components/WeeklyPlanDayPreview';
 import GoalSettingModal from '../components/GoalSettingModal';
 import api from '../api';
 
@@ -44,11 +43,6 @@ export default function DashboardPage() {
   }, [location.state]);
   const { daily, weekly, loading, refresh } = useDashboard(date);
   const { user, logout } = useAuth();
-  const { mealPlan, isLoading: mealPlanLoading, error: mealPlanError, fetchMealPlan, clearMealPlan } = useMealPlan();
-
-  useEffect(() => {
-    clearMealPlan();
-  }, [date]);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -126,15 +120,9 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <MealPlanCard
-            date={date}
-            mealPlan={mealPlan}
-            isLoading={mealPlanLoading}
-            error={mealPlanError}
-            onFetch={fetchMealPlan}
-          />
-
           <MealList entries={daily.entries} onDelete={handleDelete} />
+
+          <WeeklyPlanDayPreview date={date} />
         </>
       ) : null}
 
