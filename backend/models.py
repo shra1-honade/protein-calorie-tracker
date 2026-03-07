@@ -151,3 +151,41 @@ class MealPlanResponse(BaseModel):
     meal_plan: list[MealPlanMeal]
     day_summary: dict
     nutritionist_note: str
+
+
+# --- Weekly Meal Plan ---
+class WeeklyDayPlan(BaseModel):
+    day: str
+    date: str
+    meal_plan: list[MealPlanMeal]
+    day_summary: dict
+    nutritionist_note: str
+
+
+class WeeklyMealPlanResponse(BaseModel):
+    week_start: str
+    plan: list[WeeklyDayPlan]
+    saved: bool = False
+
+
+class ConversationMessage(BaseModel):
+    role: str  # "user" or "assistant"
+    content: str
+
+
+class GenerateWeeklyPlanRequest(BaseModel):
+    week_start: str  # YYYY-MM-DD (Monday of target week)
+
+
+class RefineWeeklyPlanRequest(BaseModel):
+    week_start: str
+    prompt: str
+    current_plan: list[WeeklyDayPlan]
+    conversation_history: list[ConversationMessage] = []
+
+
+class RefineWeeklyPlanResponse(BaseModel):
+    week_start: str
+    plan: list[WeeklyDayPlan]
+    saved: bool = False
+    assistant_message: str

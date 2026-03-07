@@ -1,7 +1,7 @@
 import asyncpg
 from config import get_settings
 
-CURRENT_SCHEMA_VERSION = 4
+CURRENT_SCHEMA_VERSION = 5
 
 pool: asyncpg.Pool = None
 
@@ -106,6 +106,18 @@ async def init_db():
             )
         """)
 
+        await conn.execute("""
+            CREATE TABLE IF NOT EXISTS weekly_meal_plans (
+                id SERIAL PRIMARY KEY,
+                user_id INTEGER NOT NULL REFERENCES users(id),
+                week_start DATE NOT NULL,
+                plan_data JSONB NOT NULL,
+                conversation_history JSONB DEFAULT '[]',
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(user_id, week_start)
+            )
+        """)
+
         # Check and set schema version
         row = await conn.fetchrow("SELECT version FROM schema_version")
         if row is None:
@@ -159,12 +171,29 @@ async def migrate_v3_to_v4(conn):
     print("Migrated schema v3 → v4: added dietary_preference and food_dislikes columns")
 
 
+async def migrate_v4_to_v5(conn):
+    """Add weekly_meal_plans table for persisting 7-day meal plans."""
+    await conn.execute("""
+        CREATE TABLE IF NOT EXISTS weekly_meal_plans (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            week_start DATE NOT NULL,
+            plan_data JSONB NOT NULL,
+            conversation_history JSONB DEFAULT '[]',
+            updated_at TIMESTAMPTZ DEFAULT NOW(),
+            UNIQUE(user_id, week_start)
+        )
+    """)
+    print("Migrated schema v4 → v5: added weekly_meal_plans table")
+
+
 async def run_migrations(conn, from_version: int, to_version: int):
     """Run numbered migrations sequentially. Add new migrations here."""
     migrations = {
         2: migrate_v1_to_v2,
         3: migrate_v2_to_v3,
         4: migrate_v3_to_v4,
+        5: migrate_v4_to_v5,
     }
     for v in range(from_version + 1, to_version + 1):
         if v in migrations:

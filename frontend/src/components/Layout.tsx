@@ -1,9 +1,10 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, UtensilsCrossed, Users, Target } from 'lucide-react';
+import { LayoutDashboard, UtensilsCrossed, Users, Target, CalendarDays } from 'lucide-react';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/log', icon: UtensilsCrossed, label: 'Log Food' },
+  { to: '/weekly-plan', icon: CalendarDays, label: 'Week Plan' },
   { to: '/groups', icon: Users, label: 'Groups' },
 ];
 

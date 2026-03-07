@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, UploadFile, File
 from datetime import datetime, timezone
+import json
 
 from dependencies import get_db, get_current_user
 from models import (
@@ -7,8 +8,13 @@ from models import (
     FoodLogRequest,
     FoodEntryResponse,
     MealPlanResponse,
+    WeeklyMealPlanResponse,
+    WeeklyDayPlan,
+    GenerateWeeklyPlanRequest,
+    RefineWeeklyPlanRequest,
+    RefineWeeklyPlanResponse,
 )
-from gemini_client import detect_food_from_image, generate_meal_plan
+from gemini_client import detect_food_from_image, generate_meal_plan, generate_weekly_meal_plan, refine_weekly_meal_plan
 
 router = APIRouter(prefix="/food", tags=["food"])
 
@@ -134,6 +140,88 @@ async def get_meal_plan(
             raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
         raise HTTPException(status_code=500, detail="Failed to generate meal plan. Please try again.")
     return MealPlanResponse(**result)
+
+
+@router.post("/weekly-meal-plan/generate", response_model=WeeklyMealPlanResponse)
+async def generate_weekly_plan(
+    body: GenerateWeeklyPlanRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Generate a fresh 7-day meal plan (not saved automatically)."""
+    try:
+        plan_days = await generate_weekly_meal_plan(user, body.week_start)
+    except Exception as e:
+        msg = str(e)
+        print(f"[weekly-meal-plan] Gemini error: {msg}")
+        if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
+            raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
+        raise HTTPException(status_code=500, detail="Failed to generate weekly meal plan. Please try again.")
+    return WeeklyMealPlanResponse(week_start=body.week_start, plan=plan_days, saved=False)
+
+
+@router.get("/weekly-meal-plan", response_model=WeeklyMealPlanResponse)
+async def get_weekly_plan(
+    week_start: str = Query(..., description="YYYY-MM-DD (Monday of the week)"),
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Load the saved weekly meal plan for a given week."""
+    from datetime import date as date_type
+    week_date = date_type.fromisoformat(week_start)
+    row = await db.fetchrow(
+        "SELECT plan_data, conversation_history FROM weekly_meal_plans WHERE user_id = $1 AND week_start = $2",
+        user["id"], week_date,
+    )
+    if not row:
+        raise HTTPException(status_code=404, detail="No saved plan for this week.")
+    plan_data = row["plan_data"]
+    if isinstance(plan_data, str):
+        plan_data = json.loads(plan_data)
+    return WeeklyMealPlanResponse(week_start=week_start, plan=plan_data, saved=True)
+
+
+@router.post("/weekly-meal-plan/save")
+async def save_weekly_plan(
+    body: WeeklyMealPlanResponse,
+    user: dict = Depends(get_current_user),
+    db=Depends(get_db),
+):
+    """Upsert a weekly meal plan into the database."""
+    from datetime import date as date_type
+    week_date = date_type.fromisoformat(body.week_start)
+    plan_json = json.dumps([d.model_dump() for d in body.plan])
+    await db.execute(
+        """INSERT INTO weekly_meal_plans (user_id, week_start, plan_data, updated_at)
+           VALUES ($1, $2, $3::jsonb, NOW())
+           ON CONFLICT (user_id, week_start)
+           DO UPDATE SET plan_data = EXCLUDED.plan_data, updated_at = NOW()""",
+        user["id"], week_date, plan_json,
+    )
+    return {"saved": True}
+
+
+@router.post("/weekly-meal-plan/refine", response_model=RefineWeeklyPlanResponse)
+async def refine_weekly_plan(
+    body: RefineWeeklyPlanRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Refine an existing weekly plan via a natural language prompt."""
+    current_plan_dicts = [d.model_dump() for d in body.current_plan]
+    history_dicts = [m.model_dump() for m in body.conversation_history]
+    try:
+        result = await refine_weekly_meal_plan(user, current_plan_dicts, body.prompt, history_dicts)
+    except Exception as e:
+        msg = str(e)
+        print(f"[weekly-meal-plan/refine] Gemini error: {msg}")
+        if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
+            raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
+        raise HTTPException(status_code=500, detail="Failed to refine meal plan. Please try again.")
+    return RefineWeeklyPlanResponse(
+        week_start=body.week_start,
+        plan=result["plan"],
+        saved=False,
+        assistant_message=result["assistant_message"],
+    )
 
 
 def _row_to_dict(row):

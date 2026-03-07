@@ -115,3 +115,26 @@ export interface MealPlanResponse {
   };
   nutritionist_note: string;
 }
+
+export interface WeeklyDayPlan {
+  day: string;
+  date: string;
+  meal_plan: MealPlanMeal[];
+  day_summary: {
+    total_protein: number;
+    total_calories: number;
+    total_carbs: number;
+  };
+  nutritionist_note: string;
+}
+
+export interface WeeklyMealPlanResponse {
+  week_start: string;
+  plan: WeeklyDayPlan[];
+  saved: boolean;
+}
+
+export interface ConversationMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}

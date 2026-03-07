@@ -219,3 +219,167 @@ Return ONLY a JSON object with this exact structure:
         response_text = response_text[start:end]
 
     return json.loads(response_text)
+
+
+def _parse_json_response(response_text: str) -> dict:
+    """Parse JSON from a Gemini response, stripping markdown code blocks."""
+    response_text = response_text.strip()
+    if response_text.startswith('```'):
+        lines = response_text.split('\n')
+        lines = lines[1:]
+        if lines and lines[-1].strip() == '```':
+            lines = lines[:-1]
+        response_text = '\n'.join(lines).strip()
+    start = response_text.find('{')
+    end = response_text.rfind('}') + 1
+    if start != -1 and end > start:
+        response_text = response_text[start:end]
+    return json.loads(response_text)
+
+
+async def generate_weekly_meal_plan(user: dict, week_start: str) -> list:
+    """
+    Generates a full 7-day meal plan for the given week using Gemini.
+
+    week_start: ISO date string for the Monday of the target week (e.g. '2026-03-02').
+    Returns a list of 7 day plan objects.
+    """
+    from datetime import date, timedelta
+    configure_gemini()
+    model = genai.GenerativeModel('models/gemini-2.5-flash')
+
+    protein_goal = user.get('protein_goal', 150)
+    calorie_goal = user.get('calorie_goal', 2000)
+    carb_goal = user.get('carb_goal', 200)
+    dietary_preference = user.get('dietary_preference', 'non_vegetarian')
+    food_dislikes = user.get('food_dislikes') or 'None'
+
+    # Build the 7 day dates
+    start_date = date.fromisoformat(week_start)
+    days = []
+    day_names = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    for i in range(7):
+        d = start_date + timedelta(days=i)
+        days.append({'day': day_names[i], 'date': d.isoformat()})
+
+    days_json = json.dumps(days, indent=2)
+
+    prompt = f"""You are an expert sports nutritionist. Generate a varied, balanced 7-day meal plan for the week.
+
+USER PROFILE:
+- Dietary type: {dietary_preference} (vegetarian/vegan/non_vegetarian)
+- Food dislikes/allergies: {food_dislikes}
+- Daily targets: {protein_goal}g protein | {calorie_goal} calories | {carb_goal}g carbs
+
+WEEK DAYS:
+{days_json}
+
+INSTRUCTIONS:
+- Generate all 4 meal slots (breakfast, lunch, dinner, snack) for every day
+- Each day must hit the daily macro targets as closely as possible
+- Vary meals across days — avoid repeating the same dish more than once per week
+- Respect dietary preference strictly (no meat/fish for vegetarian, no animal products for vegan)
+- Avoid ALL foods in the dislikes list
+- Set already_eaten to false for all meals (this is a planned week ahead)
+- Suggest COMPLETE PREPARED DISHES, not raw ingredients
+  e.g. "Scrambled Eggs on Toast", "Grilled Chicken Salad", not "3 eggs", "150g chicken"
+- Express quantity as real serving sizes: "1 bowl", "1 plate", "1 serving (~200g cooked)"
+- meal_tip: short practical cooking/prep note per meal
+- nutritionist_note per day: a brief motivational or practical note for that day
+
+Return ONLY a JSON object with this exact structure:
+{{
+  "plan": [
+    {{
+      "day": "Monday",
+      "date": "YYYY-MM-DD",
+      "meal_plan": [
+        {{
+          "meal_type": "breakfast",
+          "already_eaten": false,
+          "items": [
+            {{"food": "...", "quantity": "...", "protein_g": 0, "calories": 0, "carbs_g": 0}}
+          ],
+          "meal_protein": 0,
+          "meal_calories": 0,
+          "meal_carbs": 0,
+          "meal_tip": "..."
+        }}
+      ],
+      "day_summary": {{"total_protein": 0, "total_calories": 0, "total_carbs": 0}},
+      "nutritionist_note": "..."
+    }}
+  ]
+}}"""
+
+    response = model.generate_content(prompt)
+    result = _parse_json_response(response.text)
+    return result.get('plan', [])
+
+
+async def refine_weekly_meal_plan(
+    user: dict,
+    current_plan: list,
+    user_prompt: str,
+    conversation_history: list,
+) -> dict:
+    """
+    Refines an existing 7-day meal plan based on a natural language prompt.
+
+    Returns dict with:
+    - plan: updated list of 7 day plan objects
+    - assistant_message: short summary of changes made
+    """
+    configure_gemini()
+    model = genai.GenerativeModel('models/gemini-2.5-flash')
+
+    protein_goal = user.get('protein_goal', 150)
+    calorie_goal = user.get('calorie_goal', 2000)
+    carb_goal = user.get('carb_goal', 200)
+    dietary_preference = user.get('dietary_preference', 'non_vegetarian')
+    food_dislikes = user.get('food_dislikes') or 'None'
+
+    current_plan_json = json.dumps(current_plan, indent=2)
+
+    # Build conversation context
+    history_text = ''
+    if conversation_history:
+        history_lines = []
+        for msg in conversation_history[-6:]:  # last 3 exchanges
+            role = 'User' if msg.get('role') == 'user' else 'Assistant'
+            history_lines.append(f"{role}: {msg.get('content', '')}")
+        history_text = '\nPREVIOUS CONVERSATION:\n' + '\n'.join(history_lines) + '\n'
+
+    prompt = f"""You are an expert sports nutritionist helping a user refine their 7-day meal plan.
+
+USER PROFILE:
+- Dietary type: {dietary_preference}
+- Food dislikes/allergies: {food_dislikes}
+- Daily targets: {protein_goal}g protein | {calorie_goal} calories | {carb_goal}g carbs
+{history_text}
+CURRENT 7-DAY MEAL PLAN:
+{current_plan_json}
+
+USER REQUEST: {user_prompt}
+
+INSTRUCTIONS:
+- Update ONLY the days/meals mentioned or implied by the user's request
+- Keep all other days and meals unchanged
+- After updating, recalculate day_summary totals for modified days
+- Maintain the same JSON structure exactly
+- Still respect dietary preference and food dislikes
+- Return the COMPLETE updated plan (all 7 days)
+- Also provide a brief assistant_message (1-2 sentences) summarizing what you changed
+
+Return ONLY a JSON object:
+{{
+  "plan": [ ... complete 7-day plan with updates applied ... ],
+  "assistant_message": "..."
+}}"""
+
+    response = model.generate_content(prompt)
+    result = _parse_json_response(response.text)
+    return {
+        'plan': result.get('plan', current_plan),
+        'assistant_message': result.get('assistant_message', 'Plan updated as requested.'),
+    }
