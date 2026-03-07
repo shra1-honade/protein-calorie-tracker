@@ -24,7 +24,7 @@ function getMondayOfWeek(date: Date): Date {
 }
 
 function toISODate(d: Date): string {
-  return d.toISOString().split('T')[0];
+  return d.toISOString().split('T')[0]!;
 }
 
 function formatWeekRange(monday: Date): string {
