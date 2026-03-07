@@ -63,6 +63,9 @@ self.addEventListener('fetch', (event) => {
   // Ignore non-http(s) requests (e.g. chrome-extension://)
   if (!url.protocol.startsWith('http')) return;
 
+  // Only cache GET requests — DELETE/POST/PUT cannot be stored in Cache API
+  if (request.method !== 'GET') return;
+
   // Network-first for API calls
   if (url.pathname.startsWith('/api')) {
     event.respondWith(
