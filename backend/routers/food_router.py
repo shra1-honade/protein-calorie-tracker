@@ -151,13 +151,11 @@ async def generate_weekly_plan(
     try:
         plan_days = await generate_weekly_meal_plan(user, body.week_start)
     except Exception as e:
-        import traceback
         msg = str(e)
         print(f"[weekly-meal-plan] Gemini error: {msg}")
-        print(traceback.format_exc())
         if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
             raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
-        raise HTTPException(status_code=500, detail=f"Failed to generate weekly meal plan: {msg}")
+        raise HTTPException(status_code=500, detail="Failed to generate weekly meal plan. Please try again.")
     return WeeklyMealPlanResponse(week_start=body.week_start, plan=plan_days, saved=False)
 
 

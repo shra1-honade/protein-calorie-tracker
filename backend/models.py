@@ -135,20 +135,20 @@ class LeaderboardEntry(BaseModel):
 # --- Meal Plan ---
 class MealItem(BaseModel):
     food: str
-    quantity: str
-    protein_g: float
-    calories: float
-    carbs_g: float
+    quantity: str = ""
+    protein_g: float = 0
+    calories: float = 0
+    carbs_g: float = 0
 
 
 class MealPlanMeal(BaseModel):
     meal_type: str
     already_eaten: bool
     items: list[MealItem]
-    meal_protein: float
-    meal_calories: float
-    meal_carbs: float
-    meal_tip: str
+    meal_protein: float = 0
+    meal_calories: float = 0
+    meal_carbs: float = 0
+    meal_tip: str = ""
 
 
 class MealPlanResponse(BaseModel):
