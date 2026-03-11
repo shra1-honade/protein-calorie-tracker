@@ -51,7 +51,7 @@ async def detect_food_from_image(image_bytes: bytes) -> dict:
     """
 
     img = PIL.Image.open(io.BytesIO(image_bytes))
-    response = model.generate_content([prompt, img])
+    response = await model.generate_content_async([prompt, img])
 
     # Parse JSON from response - handle markdown code blocks
     response_text = response.text.strip()
@@ -201,7 +201,7 @@ Return ONLY a JSON object with this exact structure:
   "nutritionist_note": "..."
 }}"""
 
-    response = model.generate_content(prompt)
+    response = await model.generate_content_async(prompt)
     response_text = response.text.strip()
 
     # Remove markdown code blocks if present
@@ -312,7 +312,7 @@ Return ONLY a JSON object with this exact structure:
   ]
 }}"""
 
-    response = model.generate_content(prompt)
+    response = await model.generate_content_async(prompt)
     result = _parse_json_response(response.text)
     return result.get('plan', [])
 
@@ -377,7 +377,7 @@ Return ONLY a JSON object:
   "assistant_message": "..."
 }}"""
 
-    response = model.generate_content(prompt)
+    response = await model.generate_content_async(prompt)
     result = _parse_json_response(response.text)
     return {
         'plan': result.get('plan', current_plan),
