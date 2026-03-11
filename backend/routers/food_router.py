@@ -18,6 +18,16 @@ from gemini_client import detect_food_from_image, generate_meal_plan, generate_w
 
 router = APIRouter(prefix="/food", tags=["food"])
 
+_MEAL_ORDER = {"breakfast": 0, "lunch": 1, "dinner": 2, "snack": 3}
+
+def _sort_meals(plan_days: list) -> list:
+    for day in plan_days:
+        if hasattr(day, "meal_plan"):
+            day.meal_plan.sort(key=lambda m: _MEAL_ORDER.get(m.meal_type, 99))
+        elif isinstance(day, dict):
+            day["meal_plan"].sort(key=lambda m: _MEAL_ORDER.get(m.get("meal_type", ""), 99))
+    return plan_days
+
 
 @router.get("/common", response_model=list[CommonFoodResponse])
 async def get_common_foods(db=Depends(get_db)):
@@ -156,7 +166,7 @@ async def generate_weekly_plan(
         if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
             raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
         raise HTTPException(status_code=500, detail="Failed to generate weekly meal plan. Please try again.")
-    return WeeklyMealPlanResponse(week_start=body.week_start, plan=plan_days, saved=False)
+    return WeeklyMealPlanResponse(week_start=body.week_start, plan=_sort_meals(plan_days), saved=False)
 
 
 @router.get("/weekly-meal-plan", response_model=WeeklyMealPlanResponse)
@@ -216,6 +226,8 @@ async def refine_weekly_plan(
         if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
             raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
         raise HTTPException(status_code=500, detail="Failed to refine meal plan. Please try again.")
+    for day in result["plan"]:
+        day["meal_plan"].sort(key=lambda m: _MEAL_ORDER.get(m.get("meal_type", ""), 99))
     return RefineWeeklyPlanResponse(
         week_start=body.week_start,
         plan=result["plan"],
