@@ -9,11 +9,14 @@ import {
   ChevronDown,
   ChevronUp,
   Settings2,
+  ShoppingCart,
+  Copy,
+  X,
 } from 'lucide-react';
 import { useWeeklyMealPlan } from '../hooks/useWeeklyMealPlan';
 import { useAuth } from '../hooks/useAuth';
 import GoalSettingModal from '../components/GoalSettingModal';
-import { MealPlanMeal, WeeklyDayPlan, ConversationMessage } from '../types';
+import { MealPlanMeal, WeeklyDayPlan, ConversationMessage, GroceryListResponse } from '../types';
 
 // ---- helpers ----
 
@@ -212,6 +215,93 @@ function ChatPanel({
   );
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  'Produce': '🥦',
+  'Protein & Meat': '🍗',
+  'Dairy & Eggs': '🥛',
+  'Grains & Bread': '🍞',
+  'Pantry & Spices': '🧂',
+  'Other': '🛒',
+};
+
+function GroceryListPanel({
+  groceryList,
+  onClose,
+}: {
+  groceryList: GroceryListResponse;
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const lines: string[] = [`Grocery List (week of ${groceryList.week_start})`, ''];
+    for (const cat of groceryList.categories) {
+      lines.push(`${CATEGORY_EMOJI[cat.category] ?? '🛒'} ${cat.category}`);
+      for (const item of cat.items) {
+        const note = item.notes ? ` (${item.notes})` : '';
+        lines.push(`  • ${item.name} — ${item.quantity}${note}`);
+      }
+      lines.push('');
+    }
+    navigator.clipboard.writeText(lines.join('\n')).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShoppingCart size={16} className="text-emerald-500" />
+          <span className="font-semibold text-sm text-gray-800">Grocery List</span>
+          <span className="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full">
+            {groceryList.total_items} items
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopy}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+          >
+            <Copy size={13} />
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
+          >
+            <X size={15} />
+          </button>
+        </div>
+      </div>
+
+      <div className="max-h-96 overflow-y-auto px-4 py-3 space-y-4">
+        {groceryList.categories.map((cat) => (
+          <div key={cat.category}>
+            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+              {CATEGORY_EMOJI[cat.category] ?? '🛒'} {cat.category}
+            </h3>
+            <div className="space-y-1">
+              {cat.items.map((item, i) => (
+                <div key={i} className="flex justify-between items-start text-sm gap-2">
+                  <div className="min-w-0">
+                    <span className="text-gray-800">{item.name}</span>
+                    {item.notes && (
+                      <span className="text-gray-400 text-xs ml-1">({item.notes})</span>
+                    )}
+                  </div>
+                  <span className="text-gray-500 shrink-0 text-xs">{item.quantity}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ---- preferences bar ----
 
 const DIET_LABEL: Record<string, string> = {
@@ -261,11 +351,15 @@ export default function WeeklyMealPlanPage() {
     isGenerating,
     isRefining,
     isSaving,
+    groceryList,
+    isGeneratingGroceryList,
     error,
     generatePlan,
     loadSavedPlan,
     refinePlan,
     savePlan,
+    generateGroceryList,
+    clearGroceryList,
   } = useWeeklyMealPlan();
 
   const weekStart = toISODate(currentMonday);
@@ -275,7 +369,8 @@ export default function WeeklyMealPlanPage() {
   useEffect(() => {
     loadSavedPlan(weekStart);
     setActiveDay(0);
-  }, [weekStart, loadSavedPlan]);
+    clearGroceryList();
+  }, [weekStart, loadSavedPlan, clearGroceryList]);
 
   const prevWeek = () => {
     const d = new Date(currentMonday);
@@ -357,6 +452,16 @@ export default function WeeklyMealPlanPage() {
             {isSaving ? 'Saving…' : plan.saved ? 'Saved' : 'Save'}
           </button>
         )}
+        {plan?.saved && (
+          <button
+            onClick={generateGroceryList}
+            disabled={isGeneratingGroceryList}
+            className="flex items-center gap-1.5 bg-emerald-500 text-white rounded-xl px-4 py-3 font-semibold text-sm disabled:opacity-50 hover:bg-emerald-600 transition-colors"
+          >
+            <ShoppingCart size={16} />
+            {isGeneratingGroceryList ? '…' : 'Grocery List'}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -419,6 +524,22 @@ export default function WeeklyMealPlanPage() {
             isRefining={isRefining}
             onSend={refinePlan}
           />
+
+          {/* Grocery list loading skeleton */}
+          {isGeneratingGroceryList && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 text-center space-y-3">
+              <div className="flex justify-center">
+                <ShoppingCart size={32} className="text-emerald-400 animate-pulse" />
+              </div>
+              <p className="font-semibold text-gray-700">Building your grocery list…</p>
+              <p className="text-xs text-gray-400">Extracting ingredients from all 7 days</p>
+            </div>
+          )}
+
+          {/* Grocery list panel */}
+          {groceryList && !isGeneratingGroceryList && (
+            <GroceryListPanel groceryList={groceryList} onClose={clearGroceryList} />
+          )}
         </>
       )}
     </div>

@@ -195,6 +195,23 @@ class RefineWeeklyPlanResponse(BaseModel):
     assistant_message: str
 
 
+class GroceryItem(BaseModel):
+    name: str
+    quantity: str
+    notes: Optional[str] = None
+
+
+class GroceryCategory(BaseModel):
+    category: str
+    items: list[GroceryItem]
+
+
+class GroceryListResponse(BaseModel):
+    week_start: str
+    categories: list[GroceryCategory]
+    total_items: int
+
+
 # --- Notifications ---
 class PushSubscriptionRequest(BaseModel):
     endpoint: str

@@ -317,6 +317,57 @@ Return ONLY a JSON object with this exact structure:
     return result.get('plan', [])
 
 
+async def generate_grocery_list(plan_dicts: list, week_start: str) -> dict:
+    """
+    Generates a categorized grocery list from a 7-day meal plan.
+
+    Returns dict with:
+    - categories: list of {category, items: [{name, quantity, notes}]}
+    """
+    configure_gemini()
+    model = genai.GenerativeModel('models/gemini-2.5-flash')
+
+    # Flatten all meals and items into a readable list
+    meals_lines = []
+    for day in plan_dicts:
+        day_name = day.get('day', '')
+        for meal in day.get('meal_plan', []):
+            meal_type = meal.get('meal_type', '')
+            for item in meal.get('items', []):
+                food = item.get('food', '')
+                qty = item.get('quantity', '')
+                meals_lines.append(f"  {day_name} {meal_type}: {food} ({qty})")
+    meals_str = '\n'.join(meals_lines)
+
+    prompt = f"""You are a meal prep assistant. Given a 7-day meal plan, extract all raw ingredients needed and create a grocery shopping list.
+
+7-DAY MEAL PLAN:
+{meals_str}
+
+INSTRUCTIONS:
+- Decompose each dish into its raw ingredients (e.g. "Scrambled Eggs on Toast" → eggs, bread, butter, salt)
+- Aggregate the same ingredient across all days (e.g. if eggs appear 5 times, combine into one entry)
+- Categorize ingredients into exactly these categories: Produce, Protein & Meat, Dairy & Eggs, Grains & Bread, Pantry & Spices, Other
+- For quantity, give an aggregated estimate (e.g. "12 eggs", "500g chicken breast", "1 loaf")
+- Use notes for any helpful prep hints (optional, keep brief)
+- Do NOT list dish names — only raw ingredients
+- Return ONLY a JSON object with this exact structure:
+{{
+  "categories": [
+    {{
+      "category": "Produce",
+      "items": [
+        {{"name": "Spinach", "quantity": "200g", "notes": "fresh"}},
+        {{"name": "Tomatoes", "quantity": "6 medium"}}
+      ]
+    }}
+  ]
+}}"""
+
+    response = await model.generate_content_async(prompt)
+    return _parse_json_response(response.text)
+
+
 async def refine_weekly_meal_plan(
     user: dict,
     current_plan: list,

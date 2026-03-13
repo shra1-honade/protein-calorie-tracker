@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import api from '../api';
-import { WeeklyMealPlanResponse, WeeklyDayPlan, ConversationMessage } from '../types';
+import { WeeklyMealPlanResponse, WeeklyDayPlan, ConversationMessage, GroceryListResponse } from '../types';
 
 export function useWeeklyMealPlan() {
   const [plan, setPlan] = useState<WeeklyMealPlanResponse | null>(null);
@@ -8,12 +8,15 @@ export function useWeeklyMealPlan() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isRefining, setIsRefining] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [groceryList, setGroceryList] = useState<GroceryListResponse | null>(null);
+  const [isGeneratingGroceryList, setIsGeneratingGroceryList] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const generatePlan = useCallback(async (weekStart: string) => {
     setIsGenerating(true);
     setError(null);
     setConversationHistory([]);
+    setGroceryList(null);
     try {
       const res = await api.post<WeeklyMealPlanResponse>('/food/weekly-meal-plan/generate', {
         week_start: weekStart,
@@ -89,16 +92,38 @@ export function useWeeklyMealPlan() {
     }
   };
 
+  const generateGroceryList = async () => {
+    if (!plan) return;
+    setIsGeneratingGroceryList(true);
+    setError(null);
+    try {
+      const res = await api.post<GroceryListResponse>('/food/weekly-meal-plan/grocery-list', plan);
+      setGroceryList(res.data);
+    } catch (e: any) {
+      setError(e.response?.data?.detail ?? 'Failed to generate grocery list.');
+    } finally {
+      setIsGeneratingGroceryList(false);
+    }
+  };
+
+  const clearGroceryList = useCallback(() => {
+    setGroceryList(null);
+  }, []);
+
   return {
     plan,
     conversationHistory,
     isGenerating,
     isRefining,
     isSaving,
+    groceryList,
+    isGeneratingGroceryList,
     error,
     generatePlan,
     loadSavedPlan,
     refinePlan,
     savePlan,
+    generateGroceryList,
+    clearGroceryList,
   };
 }

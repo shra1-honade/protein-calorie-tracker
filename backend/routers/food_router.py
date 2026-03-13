@@ -13,8 +13,9 @@ from models import (
     GenerateWeeklyPlanRequest,
     RefineWeeklyPlanRequest,
     RefineWeeklyPlanResponse,
+    GroceryListResponse,
 )
-from gemini_client import detect_food_from_image, generate_meal_plan, generate_weekly_meal_plan, refine_weekly_meal_plan
+from gemini_client import detect_food_from_image, generate_meal_plan, generate_weekly_meal_plan, refine_weekly_meal_plan, generate_grocery_list
 
 router = APIRouter(prefix="/food", tags=["food"])
 
@@ -233,6 +234,30 @@ async def refine_weekly_plan(
         plan=result["plan"],
         saved=False,
         assistant_message=result["assistant_message"],
+    )
+
+
+@router.post("/weekly-meal-plan/grocery-list", response_model=GroceryListResponse)
+async def get_grocery_list(
+    body: WeeklyMealPlanResponse,
+    user: dict = Depends(get_current_user),
+):
+    """Generate a categorized grocery list from a saved weekly meal plan."""
+    plan_dicts = [d.model_dump() for d in body.plan]
+    try:
+        result = await generate_grocery_list(plan_dicts, body.week_start)
+    except Exception as e:
+        msg = str(e)
+        print(f"[weekly-meal-plan/grocery-list] Gemini error: {msg}")
+        if "429" in msg or "quota" in msg.lower() or "exhausted" in msg.lower():
+            raise HTTPException(status_code=503, detail="AI service quota reached. Please try again later.")
+        raise HTTPException(status_code=500, detail="Failed to generate grocery list. Please try again.")
+    categories = result.get("categories", [])
+    total_items = sum(len(cat.get("items", [])) for cat in categories)
+    return GroceryListResponse(
+        week_start=body.week_start,
+        categories=categories,
+        total_items=total_items,
     )
 
 

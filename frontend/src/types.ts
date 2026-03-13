@@ -142,3 +142,20 @@ export interface ConversationMessage {
   role: 'user' | 'assistant';
   content: string;
 }
+
+export interface GroceryItem {
+  name: string;
+  quantity: string;
+  notes?: string;
+}
+
+export interface GroceryCategory {
+  category: string;
+  items: GroceryItem[];
+}
+
+export interface GroceryListResponse {
+  week_start: string;
+  categories: GroceryCategory[];
+  total_items: number;
+}
